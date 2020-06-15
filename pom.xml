@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.abubusoft.reversi</groupId>
     <artifactId>reversi-backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>Reversi Server</name>
     <description>Backend for Reversi Game</description>
 
