@@ -1,5 +1,5 @@
 # reversi-backend
-Backend server for reversi game
+Backend server for reversi gameStatus
 
 ## References
 Spring boot config

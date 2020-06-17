@@ -8,6 +8,7 @@ class ReversiServerApplicationTests {
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }
