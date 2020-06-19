@@ -1,29 +1,28 @@
 package org.abubusoft.reversi.server.web.controllers;
 
 import org.abubusoft.reversi.server.model.GameUser;
-import org.abubusoft.reversi.server.repositories.UserRepository;
+import org.abubusoft.reversi.server.repositories.GameUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
 
-  public UserController(@Autowired UserRepository userRepository) {
-    this.userRepository = userRepository;
+  public UserController(@Autowired GameUserRepository gameUserRepository) {
+    this.gameUserRepository = gameUserRepository;
   }
 
-  private final UserRepository userRepository;
+  private final GameUserRepository gameUserRepository;
 
   @GetMapping("/users")
   public List<GameUser> getUsers() {
-    return (List<GameUser>) userRepository.findAll();
+    return (List<GameUser>) gameUserRepository.findAll();
   }
 
   @PostMapping("/users")
   void addUser(@RequestBody GameUser gameUser) {
-    userRepository.save(gameUser);
+    gameUserRepository.save(gameUser);
   }
 }

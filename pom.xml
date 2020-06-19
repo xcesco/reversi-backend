@@ -87,11 +87,42 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
+            <groupId>com.tinder.scarlet</groupId>
+            <artifactId>scarlet</artifactId>
+            <version>0.1.10</version>
+            <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.tinder.scarlet/websocket-okhttp -->
+        <dependency>
+            <groupId>com.tinder.scarlet</groupId>
+            <artifactId>websocket-okhttp</artifactId>
+            <version>0.1.10</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.tinder.scarlet/message-adapter-jackson -->
+        <dependency>
+            <groupId>com.tinder.scarlet</groupId>
+            <artifactId>message-adapter-jackson</artifactId>
+            <version>0.1.10</version>
+        </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/com.tinder.scarlet/stream-adapter-rxjava2 -->
+        <dependency>
+            <groupId>com.tinder.scarlet</groupId>
+            <artifactId>stream-adapter-rxjava2</artifactId>
+            <version>0.1.10</version>
+        </dependency>
+
+
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-devtools</artifactId>-->
+        <!--            <scope>runtime</scope>-->
+        <!--            <optional>true</optional>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -117,6 +148,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.springframework.session/spring-session -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session</artifactId>
+            <version>1.3.5.RELEASE</version>
+        </dependency>
+
 
         <dependency>
             <groupId>it.fmt.games.reversi</groupId>

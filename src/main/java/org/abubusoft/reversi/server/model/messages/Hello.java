@@ -2,14 +2,14 @@ package org.abubusoft.reversi.server.model.messages;
 
 import java.io.Serializable;
 
-public class Greeting implements Serializable {
-  public static Greeting of(String ciao) {
-    Greeting greeting = new Greeting();
-    greeting.setMessage(ciao);
-    return greeting;
+public class Hello implements Serializable {
+  public Hello() {
   }
 
-  public Greeting() {
+  public static Hello of(String message) {
+    Hello result = new Hello();
+    result.setMessage(message);
+    return result;
   }
 
   public String getMessage() {
@@ -21,5 +21,4 @@ public class Greeting implements Serializable {
   }
 
   private String message;
-
 }

@@ -1,4 +1,4 @@
 package org.abubusoft.reversi.server.model;
 
-public class GameServer {
+public class NetworkPlayer {
 }
