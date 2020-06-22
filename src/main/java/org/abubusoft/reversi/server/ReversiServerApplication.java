@@ -7,13 +7,16 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import it.fmt.games.reversi.UserInputReader;
 import it.fmt.games.reversi.model.Coordinates;
+import it.fmt.games.reversi.model.Player;
 import org.abubusoft.reversi.server.model.NetworkPlayer1;
 import org.abubusoft.reversi.server.model.NetworkPlayer2;
 import org.abubusoft.reversi.server.repositories.support.CoordinateDeserializer;
 import org.abubusoft.reversi.server.repositories.support.CoordinateSerializer;
 import org.abubusoft.reversi.server.services.GameInstance;
 import org.abubusoft.reversi.server.services.GameInstanceImpl;
+import org.abubusoft.reversi.server.services.NetworkUserInputReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,9 +25,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 @SpringBootApplication
 public class ReversiServerApplication {
@@ -68,7 +74,7 @@ public class ReversiServerApplication {
   }
 
   @Bean(GAME_EXECUTOR)
-  public Executor gameExecutor() {
+  public ThreadPoolTaskExecutor gameExecutor() {
     Runtime runtime = Runtime.getRuntime();
     int numberOfProcessors = runtime.availableProcessors();
     logger.info("{} max size is {} (available processors to this JVM)", GAME_EXECUTOR, numberOfProcessors);
@@ -87,5 +93,11 @@ public class ReversiServerApplication {
   @Scope(BeanDefinition.SCOPE_PROTOTYPE)
   public GameInstance gameInstance(NetworkPlayer1 player1, NetworkPlayer2 player2) {
     return new GameInstanceImpl(player1, player2);
+  }
+
+  @Bean
+  @Scope(BeanDefinition.SCOPE_PROTOTYPE)
+  public UserInputReader userInputReader(BlockingQueue<Pair<Player, Coordinates>> movesQueue, int turnTimeout) {
+    return new NetworkUserInputReader(movesQueue, turnTimeout);
   }
 }

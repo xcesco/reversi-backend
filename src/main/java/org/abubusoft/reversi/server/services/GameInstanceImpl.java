@@ -3,13 +3,16 @@ package org.abubusoft.reversi.server.services;
 import it.fmt.games.reversi.GameRenderer;
 import it.fmt.games.reversi.Reversi;
 import it.fmt.games.reversi.UserInputReader;
-import it.fmt.games.reversi.model.Coordinates;
-import it.fmt.games.reversi.model.GameSnapshot;
-import it.fmt.games.reversi.model.Player;
+import it.fmt.games.reversi.model.*;
 import org.abubusoft.reversi.server.events.MatchStatusEvent;
-import org.abubusoft.reversi.server.model.*;
+import org.abubusoft.reversi.server.exceptions.AppPlayerTimeoutException;
+import org.abubusoft.reversi.server.model.AbstractBaseEntity;
+import org.abubusoft.reversi.server.model.MatchStatus;
+import org.abubusoft.reversi.server.model.NetworkPlayer1;
+import org.abubusoft.reversi.server.model.NetworkPlayer2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,8 +28,16 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
 
   BlockingQueue<Pair<Player, Coordinates>> movesQueue = new LinkedBlockingQueue<>();
 
+  @Autowired
+  public void setUserInputReaderProvider(ObjectProvider<UserInputReader> userInputReaderProvider) {
+    this.userInputReaderProvider = userInputReaderProvider;
+  }
+
+  private ObjectProvider<UserInputReader> userInputReaderProvider;
+
   @Value("${game.turn.timeout}")
   private int turnTimeout;
+  private Reversi reversi;
 
   @Autowired
   public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
@@ -54,10 +65,22 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
 
   @Override
   public void play() {
-    UserInputReader inputReader = new NetworkUserInputReader(movesQueue, turnTimeout);
+    UserInputReader inputReader = userInputReaderProvider.getObject(movesQueue, turnTimeout);
     NetworkGameLogicImpl gameLogic = new NetworkGameLogicImpl(player1, player2, inputReader);
-    Reversi reversi = new Reversi(this, gameLogic);
-    reversi.play();
+    reversi = new Reversi(this, gameLogic);
+
+    try {
+      reversi.play();
+    } catch (AppPlayerTimeoutException e) {
+      GameSnapshot timeoutGameSnapshot = new GameSnapshot(gameSnapshot.getScore(),
+              gameSnapshot.getLastMove(),
+              gameSnapshot.getActivePiece(),
+              gameSnapshot.getAvailableMoves(),
+              gameSnapshot.getBoard(),
+              e.getPlayer().getPiece() == Piece.PLAYER_1 ? GameStatus.PLAYER2_WIN : GameStatus.PLAYER1_WIN);
+
+      applicationEventPublisher.publishEvent(new MatchStatusEvent(player1, player2, MatchStatus.of(getId(), timeoutGameSnapshot)));
+    }
   }
 
   private boolean isValidMove(Player player, Coordinates coordinates) {

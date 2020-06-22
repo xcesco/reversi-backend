@@ -52,32 +52,31 @@ public class GameServiceImpl implements GameService {
   }
 
   @EventListener
- // @Transactional
+  @Transactional
   public void onGameStatusChanges(MatchStatusEvent event) {
     logger.info("onGameStatusChanges {}", event.getMatchStatus());
-    UUID matchId = event.getMatchStatus().getId();
 
-    MatchStatus status = matchStatusRepository.findById(Objects.requireNonNull(matchId))
-            .orElse(new MatchStatus(matchId));
-    status.setSnapshot(event.getMatchStatus().getSnapshot());
+    MatchStatus matchStatus=matchStatusRepository.save(event.getMatchStatus());
+    UUID matchId = matchStatus.getId();
 
-    matchStatusRepository.save(event.getMatchStatus());
     User user1 = userRepository.findById(event.getPlayer1().getUserId()).orElse(null);
     User user2 = userRepository.findById(event.getPlayer2().getUserId()).orElse(null);
 
     if (user1 != null) {
       user1.setStatus(UserStatus.IN_GAME);
+      user1.setMatchStatus(matchStatus);
       userRepository.save(user1);
     }
 
     if (user2 != null) {
       user2.setStatus(UserStatus.IN_GAME);
+      user2.setMatchStatus(matchStatus);
       userRepository.save(user2);
     }
 
     String topic = TOPIC_PREFIX + "/match/" + matchId;
     logger.info("Send message to {}", topic);
-    messagingTemplate.convertAndSend(topic, status.getSnapshot());
+    messagingTemplate.convertAndSend(topic, matchStatus.getSnapshot());
   }
 
   @Override
@@ -126,6 +125,7 @@ public class GameServiceImpl implements GameService {
       updateUserStatus(userUUID, UserStatus.AWAITNG_TO_START);
 
       if (otherUser != null) {
+        // already set
         //updateUserStatus(otherUser.getId(), UserStatus.AWAITNG_TO_START);
 
         playMatch(new NetworkPlayer1(user.getId()),

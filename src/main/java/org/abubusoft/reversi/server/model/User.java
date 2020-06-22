@@ -1,6 +1,7 @@
 package org.abubusoft.reversi.server.model;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 public class User extends AbstractBaseEntity {
@@ -13,6 +14,22 @@ public class User extends AbstractBaseEntity {
 
   public User() {
     super(null);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    User user = (User) o;
+    return Objects.equals(name, user.name) &&
+            status == user.status &&
+            Objects.equals(matchStatus, user.matchStatus);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), name, status, matchStatus);
   }
 
   public String getName() {

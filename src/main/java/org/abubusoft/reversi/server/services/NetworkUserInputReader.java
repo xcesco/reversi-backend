@@ -3,8 +3,7 @@ package org.abubusoft.reversi.server.services;
 import it.fmt.games.reversi.UserInputReader;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.Player;
-import org.abubusoft.reversi.server.exceptions.AppAssert;
-import org.abubusoft.reversi.server.exceptions.TimeoutException;
+import org.abubusoft.reversi.server.exceptions.AppPlayerTimeoutException;
 import org.springframework.data.util.Pair;
 
 import java.util.List;
@@ -28,10 +27,8 @@ public class NetworkUserInputReader implements UserInputReader {
     try {
       move = movesQueue.poll(turnTimeout * 2, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      AppAssert.fail("timeout");
+      throw new AppPlayerTimeoutException(player, "timeout");
     }
-
-    AppAssert.assertTrue(move != null, TimeoutException.class, "timeout");
 
     return move.getSecond();
   }

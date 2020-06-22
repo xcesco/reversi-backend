@@ -1,18 +1,34 @@
 package org.abubusoft.reversi.server.model;
 
 import it.fmt.games.reversi.model.GameSnapshot;
-import org.abubusoft.reversi.server.repositories.support.JpaConverterJson;
+import org.abubusoft.reversi.server.repositories.support.GameSnaphostJpaConverterJson;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 public class MatchStatus extends AbstractBaseEntity {
   @Lob
-  @Convert(converter = JpaConverterJson.class)
+  @Convert(converter = GameSnaphostJpaConverterJson.class)
   private GameSnapshot snapshot;
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    MatchStatus that = (MatchStatus) o;
+    return Objects.equals(snapshot, that.snapshot) &&
+            Objects.equals(users, that.users);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), snapshot, users);
+  }
 
   @JoinColumn(name = "match_id")
   @OneToMany
@@ -31,6 +47,14 @@ public class MatchStatus extends AbstractBaseEntity {
     matchStatus.snapshot = snapshot;
 
     return matchStatus;
+  }
+
+  public List<User> getUsers() {
+    return users;
+  }
+
+  public void setUsers(List<User> users) {
+    this.users = users;
   }
 
   public GameSnapshot getSnapshot() {
