@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server.model.events;
+package org.abubusoft.reversi.server.events;
 
 public class StartEvent extends GameEvent {
   public StartEvent(Object source) {

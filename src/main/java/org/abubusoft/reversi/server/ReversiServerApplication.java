@@ -1,26 +1,34 @@
 package org.abubusoft.reversi.server;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import org.abubusoft.reversi.server.model.GameStatus;
-import org.abubusoft.reversi.server.repositories.GameRepository;
+import it.fmt.games.reversi.model.Coordinates;
+import org.abubusoft.reversi.server.model.NetworkPlayer1;
+import org.abubusoft.reversi.server.model.NetworkPlayer2;
+import org.abubusoft.reversi.server.repositories.support.CoordinateDeserializer;
+import org.abubusoft.reversi.server.repositories.support.CoordinateSerializer;
+import org.abubusoft.reversi.server.services.GameInstance;
+import org.abubusoft.reversi.server.services.GameInstanceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
-import java.util.stream.Stream;
 
 @SpringBootApplication
 public class ReversiServerApplication {
-  final static Logger logger= LoggerFactory.getLogger(ReversiServerApplication.class);
+  final static Logger logger = LoggerFactory.getLogger(ReversiServerApplication.class);
 
   public static final String GAME_EXECUTOR = "gameExecutor";
   private static final String COMPUTE_THREAD_PREFIX = "queue-";
@@ -50,6 +58,15 @@ public class ReversiServerApplication {
                     .url("http://springdoc.org")));
   }
 
+  @Bean
+  public ObjectMapper objectMapper() {
+//    Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+//    builder.serializationInclusion(JsonInclude.Include.NON_NULL);
+//    builder.serializationInclusion(JsonInclude);
+
+    return JSONMapperUtils.createMapper();
+  }
+
   @Bean(GAME_EXECUTOR)
   public Executor gameExecutor() {
     Runtime runtime = Runtime.getRuntime();
@@ -64,5 +81,11 @@ public class ReversiServerApplication {
     executor.setThreadNamePrefix(COMPUTE_THREAD_PREFIX);
     executor.initialize();
     return executor;
+  }
+
+  @Bean
+  @Scope(BeanDefinition.SCOPE_PROTOTYPE)
+  public GameInstance gameInstance(NetworkPlayer1 player1, NetworkPlayer2 player2) {
+    return new GameInstanceImpl(player1, player2);
   }
 }

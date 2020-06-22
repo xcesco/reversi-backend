@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server;
+package org.abubusoft.reversi.client;
 
 import org.abubusoft.reversi.server.WebSocketConfig;
 import org.springframework.context.annotation.Configuration;

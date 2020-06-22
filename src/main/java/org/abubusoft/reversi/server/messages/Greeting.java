@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server.model.messages;
+package org.abubusoft.reversi.server.messages;
 
 import java.io.Serializable;
 

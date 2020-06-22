@@ -1,5 +1,5 @@
 # reversi-backend
-Backend server for reversi gameStatus
+Backend server for reversi matchStatus
 
 ## References
 Spring boot config
@@ -15,3 +15,6 @@ Spring boot config
  - https://medium.com/@MelvinBlokhuijzen/spring-websocket-endpoints-integration-testing-180357b4f24c
  - https://stackoverflow.com/questions/45405332/websocket-authentication-and-authorization-in-spring
  - https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#websocket-stomp
+ 
+ Rest 
+ - https://spring.io/guides/tutorials/rest/

@@ -1,8 +1,8 @@
 package org.abubusoft.reversi.server;
 
 
-import org.abubusoft.reversi.server.model.messages.Greeting;
-import org.abubusoft.reversi.server.web.controllers.GameController;
+import org.abubusoft.reversi.server.messages.Greeting;
+import org.abubusoft.reversi.server.web.controllers.MessagesController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,20 +24,16 @@ import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.abubusoft.reversi.server.WebSocketConfig.TOPIC_PREFIX;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(SpringExtension.class)
-//@EnableAutoConfiguration(includes = {SecurityAutoConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class WebsocketEndpointIT extends WebSecurityConfigurerAdapter {
   Logger logger = LoggerFactory.getLogger(WebsocketEndpointIT.class);
@@ -52,49 +48,46 @@ public class WebsocketEndpointIT extends WebSecurityConfigurerAdapter {
   private static final String SUBSCRIBE_MOVE_ENDPOINT = "/topic/move/";
 
   private CompletableFuture<Greeting> completableFuture;
+  private WebSocketStompClient stompClient;
+  private StompSession stompSession;
 
   @BeforeEach
-  public void setup() {
+  public void setup() throws InterruptedException, ExecutionException, TimeoutException {
     completableFuture = new CompletableFuture<>();
     URL = "ws://localhost:" + port + WebSocketConfig.WE_ENDPOINT;
+
+    stompClient = new WebSocketStompClient(new SockJsClient(createTransportClient()));
+    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+    stompSession = stompClient.connect(URL, new StompSessionHandlerAdapter() {
+    }).get(1, SECONDS);
   }
 
 
   @Test
-  public void testCreateGameEndpoint() throws URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+  public void testCreateGameEndpoint() throws InterruptedException {
     String uuid = UUID.randomUUID().toString();
 
-    WebSocketStompClient stompClient = new WebSocketStompClient(new SockJsClient(createTransportClient()));
-    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-    StompSession stompSession = stompClient.connect(URL, new StompSessionHandlerAdapter() {
-    }).get(1, SECONDS);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    executor.submit(() -> {
+      stompSession.subscribe(TOPIC_PREFIX + SUBSCRIBE_GREETING_PREFIX + uuid,
+              new CreateGameStompFrameHandler());
+
+      Greeting greeting = null;
+      try {
+        greeting = completableFuture.get(10, SECONDS);
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        e.printStackTrace();
+      }
+
+      logger.info("Recived " + greeting.getMessage());
+      assertNotNull(greeting);
+    });
 
 
-    stompSession.subscribe(TOPIC_PREFIX + SUBSCRIBE_GREETING_PREFIX + uuid, new CreateGameStompFrameHandler());
-    stompSession.send(WebSocketConfig.APPLICATION_ENDPOINT + GameController.GREETINGS + uuid, Greeting.of("Benvenuto " + uuid));
+    stompSession.send(WebSocketConfig.APPLICATION_ENDPOINT + MessagesController.GREETINGS + uuid, Greeting.of("Benvenuto " + uuid));
 
-    Greeting greeting = completableFuture.get(10, SECONDS);
-
-    logger.info("Recived " + greeting.getMessage());
-    assertNotNull(greeting);
+    executor.awaitTermination(10, SECONDS);
   }
-/*
-    @Test
-    public void testMakeMoveEndpoint() throws InterruptedException, ExecutionException, TimeoutException {
-        String uuid = UUID.randomUUID().toString();
-
-        WebSocketStompClient stompClient = new WebSocketStompClient(new SockJsClient(createTransportClient()));
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-
-        StompSession stompSession = stompClient.connect(URL, new StompSessionHandlerAdapter() {
-        }).get(1, SECONDS);
-
-        stompSession.subscribe(SUBSCRIBE_MOVE_ENDPOINT + uuid, new CreateGameStompFrameHandler());
-        stompSession.send(SEND_MOVE_ENDPOINT + uuid, new Move(1, 0));
-        GameState gameStateAfterMove = completableFuture.get(5, SECONDS);
-
-        assertNotNull(gameStateAfterMove);
-    }*/
 
   private List<Transport> createTransportClient() {
     List<Transport> transports = new ArrayList<>(1);
@@ -106,6 +99,7 @@ public class WebsocketEndpointIT extends WebSecurityConfigurerAdapter {
   private class CreateGameStompFrameHandler implements StompFrameHandler {
     @Override
     public Type getPayloadType(StompHeaders stompHeaders) {
+      logger.info("headers " + stompHeaders.toString());
       return Greeting.class;
     }
 

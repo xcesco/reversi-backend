@@ -1,7 +1,7 @@
 package org.abubusoft.reversi.client;
 
-import org.abubusoft.reversi.server.model.messages.Greeting;
-import org.abubusoft.reversi.server.model.messages.Hello;
+import org.abubusoft.reversi.server.messages.Greeting;
+import org.abubusoft.reversi.server.messages.Hello;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {TestApplication.class})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT /*, classes = {TestApplication.class}*/)
 public class GreetingIntegrationTests {
 
   @LocalServerPort

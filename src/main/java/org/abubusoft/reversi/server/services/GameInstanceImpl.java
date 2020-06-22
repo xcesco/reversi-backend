@@ -1,10 +1,13 @@
-package org.abubusoft.reversi.server.model;
+package org.abubusoft.reversi.server.services;
 
-import it.fmt.games.reversi.*;
+import it.fmt.games.reversi.GameRenderer;
+import it.fmt.games.reversi.Reversi;
+import it.fmt.games.reversi.UserInputReader;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.Player;
-import org.abubusoft.reversi.server.model.events.GameStatusEvent;
+import org.abubusoft.reversi.server.events.MatchStatusEvent;
+import org.abubusoft.reversi.server.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,16 +15,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.util.Pair;
 
-import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance, GameRenderer {
-  Logger logger = LoggerFactory.getLogger(GameInstanceImpl.class);
-  Reversi reversi;
+  private final NetworkPlayer1 player1;
+  private final NetworkPlayer2 player2;
+  private static final Logger logger = LoggerFactory.getLogger(GameInstanceImpl.class);
 
   BlockingQueue<Pair<Player, Coordinates>> movesQueue = new LinkedBlockingQueue<>();
-  BlockingQueue<Pair<UUID, GameSnapshot>> gamesQueue = new LinkedBlockingQueue<>();
 
   @Value("${game.turn.timeout}")
   private int turnTimeout;
@@ -35,16 +37,10 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
 
   private GameSnapshot gameSnapshot;
 
-  public GameInstanceImpl(Player1 player1, Player2 player2) {
+  public GameInstanceImpl(NetworkPlayer1 player1, NetworkPlayer2 player2) {
     super(null);
-    NetworkRenderer renderer = new NetworkRenderer();
-    UserInputReader inputReader = new NetworkUserInputReader(movesQueue, turnTimeout);
-    NetworkGameLogicImpl gameLogic = new NetworkGameLogicImpl(player1, player2, inputReader);
-    reversi = new Reversi(renderer, gameLogic);
-  }
-
-  public void setTurnTimeout(int turnTimeout) {
-    this.turnTimeout = turnTimeout;
+    this.player1 = player1;
+    this.player2 = player2;
   }
 
   @Override
@@ -58,6 +54,9 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
 
   @Override
   public void play() {
+    UserInputReader inputReader = new NetworkUserInputReader(movesQueue, turnTimeout);
+    NetworkGameLogicImpl gameLogic = new NetworkGameLogicImpl(player1, player2, inputReader);
+    Reversi reversi = new Reversi(this, gameLogic);
     reversi.play();
   }
 
@@ -69,7 +68,6 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
   @Override
   public void render(GameSnapshot gameSnapshot) {
     this.gameSnapshot = gameSnapshot;
-    //this.gamesQueue.add(Pair.of(getId(), gameSnapshot));
-    applicationEventPublisher.publishEvent(GameStatusEvent.of(getId(), gameSnapshot));
+    applicationEventPublisher.publishEvent(new MatchStatusEvent(player1, player2, MatchStatus.of(getId(), gameSnapshot)));
   }
 }

@@ -1,18 +1,23 @@
 package org.abubusoft.reversi.server;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.abubusoft.reversi.server.web.AngularResourceResolver;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-//@Configuration
-//@EnableWebSecurity
-//@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements WebMvcConfigurer {
 
 //	@Override
@@ -31,12 +36,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
 
   }
 
-  @Bean
-  public Jackson2ObjectMapperBuilder objectMapperBuilder() {
-    Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-    // builder.serializationInclusion(JsonInclude.Include.NON_NULL);
-    return builder;
-  }
+//  @Bean
+//  public Jackson2ObjectMapperBuilder objectMapperBuilder() {
+//    Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+//    // builder.serializationInclusion(JsonInclude.Include.NON_NULL);
+//    return builder.build();
+//  }
+
 
 //	@Autowired
 //	private JwtAuthenticationEntryPoint unauthorizedHandler;
@@ -53,12 +59,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
             .httpBasic().disable()
             .cors().disable()
             .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            //.and()
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
             //	.addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class)
             //.exceptionHandling()
             //	.authenticationEntryPoint(unauthorizedHandler)
-            .and()
+            //.and()
             .authorizeRequests()
             //	parte angular
             .antMatchers("/public/**")
@@ -71,6 +78,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter implements W
 
             // configurazione interfaccia swagger
             .antMatchers("/api-docs")
+            .permitAll()
+
+            // servizi WEB public
+            .antMatchers("/api/v1/**")
             .permitAll()
 
             // servizi WEB public

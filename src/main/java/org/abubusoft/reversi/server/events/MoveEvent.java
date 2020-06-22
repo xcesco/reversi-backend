@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server.model.events;
+package org.abubusoft.reversi.server.events;
 
 import org.abubusoft.reversi.server.model.GameMove;
 

@@ -1,6 +1,6 @@
 package org.abubusoft.reversi.server;
 
-import org.abubusoft.reversi.server.model.events.GameStatusEvent;
+import org.abubusoft.reversi.server.events.MatchStatusEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -45,9 +45,9 @@ public class StompEventListener {
   private final SimpMessageSendingOperations messagingTemplate;
 
   @EventListener
-  public void onGameStatusChanges(GameStatusEvent event) {
+  public void onGameStatusChanges(MatchStatusEvent event) {
     //StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-    logger.info("onGameStatusChanges {}", event.getGameUUID());
+    logger.info("onGameStatusChanges {}", event.getMatchStatus().getId());
 
     //transmitting current user's latest location feed
     // messagingTemplate.convertAndSend("/app/getData", new Greeting("ciao"));

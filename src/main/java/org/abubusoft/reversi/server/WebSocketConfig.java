@@ -1,6 +1,6 @@
 package org.abubusoft.reversi.server;
 
-import org.abubusoft.reversi.server.model.GameService;
+import org.abubusoft.reversi.server.services.GameService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,7 @@ import java.time.Duration;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfigurer<ExpiringSession> {
 
-  public static final String WE_ENDPOINT = "/messages";
+  public static final String WE_ENDPOINT = "/api/messages";
   public static final String APPLICATION_ENDPOINT = "/app";
   public static final String TOPIC_PREFIX = "/topic";
 

@@ -1,5 +1,6 @@
 package org.abubusoft.reversi.server.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.domain.Persistable;
 
 import javax.persistence.*;
@@ -12,6 +13,8 @@ public abstract class AbstractBaseEntity implements Persistable<UUID> {
   @Id
   @Column(name = "id", length = 16, unique = true, nullable = false)
   private final UUID id;
+
+  @JsonIgnore
   @Transient
   private boolean persisted;
 

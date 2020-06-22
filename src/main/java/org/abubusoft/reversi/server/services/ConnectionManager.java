@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server.model;
+package org.abubusoft.reversi.server.services;
 
 /**
  * The job of the connection manager is to abstract the connection between two computers over the network.

@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server.model;
+package org.abubusoft.reversi.server.services;
 
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.Player;

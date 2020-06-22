@@ -6,7 +6,7 @@ import com.tinder.scarlet.streamadapter.rxjava2.RxJava2StreamAdapterFactory;
 import com.tinder.scarlet.websocket.okhttp.OkHttpClientUtils;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
-import org.abubusoft.reversi.server.model.messages.Greeting;
+import org.abubusoft.reversi.server.messages.Greeting;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
