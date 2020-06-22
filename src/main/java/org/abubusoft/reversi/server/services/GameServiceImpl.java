@@ -77,6 +77,14 @@ public class GameServiceImpl implements GameService {
     String topic = TOPIC_PREFIX + "/match/" + matchId;
     logger.info("Send message to {}", topic);
     messagingTemplate.convertAndSend(topic, matchStatus.getSnapshot());
+
+    String user1Topic = TOPIC_PREFIX + "/user/" + user1.getId();
+    logger.info("Send message to {}", user1Topic);
+    messagingTemplate.convertAndSend(user1Topic, matchStatus.getSnapshot());
+
+    String user2Topic = TOPIC_PREFIX + "/user/" + user2.getId();
+    logger.info("Send message to {}", user2Topic);
+    messagingTemplate.convertAndSend(user2Topic, matchStatus.getSnapshot());
   }
 
   @Override

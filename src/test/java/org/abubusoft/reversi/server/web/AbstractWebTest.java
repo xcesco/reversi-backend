@@ -13,9 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -23,6 +25,7 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -32,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.abubusoft.reversi.server.ReversiServerApplication.GAME_EXECUTOR;
 
+@ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class AbstractWebTest {
@@ -48,15 +52,36 @@ public abstract class AbstractWebTest {
     return transports;
   }
 
+  protected abstract Type onPayLoadType(StompHeaders headers);
+  protected abstract void onHandleFrame(StompHeaders headers, Object payload);
+  protected abstract void onAfterConnected(StompSession session, StompHeaders connectedHeaders);
+
   @BeforeEach
   public void setup() throws InterruptedException, ExecutionException, TimeoutException {
     completableFuture = new CompletableFuture<>();
+  }
 
+  protected void connectOnWebsocket() throws InterruptedException, ExecutionException, TimeoutException {
     stompClient = new WebSocketStompClient(new SockJsClient(createTransportClient()));
     stompClient.setMessageConverter(new MappingJackson2MessageConverter());
     stompSession = stompClient.connect(websocketBaseUrl, new StompSessionHandlerAdapter() {
+      @Override
+      public Type getPayloadType(StompHeaders headers) {
+        return onPayLoadType(headers);
+      }
+
+      @Override
+      public void handleFrame(StompHeaders headers, Object payload) {
+        onHandleFrame(headers, payload);
+      }
+
+      @Override
+      public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+        onAfterConnected(session, connectedHeaders);
+      }
     }).get(1, SECONDS);
   }
+
 
   @BeforeEach
   public void beforeAll() {

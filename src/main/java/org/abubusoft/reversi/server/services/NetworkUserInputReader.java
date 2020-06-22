@@ -23,13 +23,17 @@ public class NetworkUserInputReader implements UserInputReader {
 
   @Override
   public Coordinates readInputFor(Player player, List<Coordinates> list) {
-    Pair<Player, Coordinates> move = null;
+    Pair<Player, Coordinates> move;
+
     try {
       move = movesQueue.poll(turnTimeout * 2, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
+      e.printStackTrace();
       throw new AppPlayerTimeoutException(player, "timeout");
     }
-
+    if (move == null) {
+      throw new AppPlayerTimeoutException(player, "timeout");
+    }
     return move.getSecond();
   }
 }

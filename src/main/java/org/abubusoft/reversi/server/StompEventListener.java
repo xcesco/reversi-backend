@@ -44,14 +44,14 @@ public class StompEventListener {
 
   private final SimpMessageSendingOperations messagingTemplate;
 
-  @EventListener
-  public void onGameStatusChanges(MatchStatusEvent event) {
-    //StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
-    logger.info("onGameStatusChanges {}", event.getMatchStatus().getId());
-
-    //transmitting current user's latest location feed
-    // messagingTemplate.convertAndSend("/app/getData", new Greeting("ciao"));
-  }
+//  @EventListener
+//  public void onGameStatusChanges(MatchStatusEvent event) {
+//    //StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
+//    logger.info("onGameStatusChanges {}", event.getMatchStatus().getId());
+//
+//    //transmitting current user's latest location feed
+//   // messagingTemplate.convertAndSend(PREFIX , new Greeting("ciao"));
+//  }
 
   @EventListener
   public void onSessionDisconnected(SessionDisconnectEvent event) {

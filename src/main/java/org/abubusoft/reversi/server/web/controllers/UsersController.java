@@ -14,7 +14,6 @@ import java.util.UUID;
 @RequestMapping(value = UsersController.API_ENTRYPOINT + UsersController.USERS, produces = {MediaType.APPLICATION_JSON_VALUE})
 @RestController
 public class UsersController {
-
   public static final String API_ENTRYPOINT = "/api/v1/public";
   public static final String USERS = "/users";
   private final GameService gameService;
