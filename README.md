@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/xcesco/reversi-backend.svg?branch=master)](https://travis-ci.org/xcesco/reversi-backend)
+
 # reversi-backend
 Backend server for reversi matchStatus
 
