@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/xcesco/reversi-backend.svg?branch=master)](https://travis-ci.org/xcesco/reversi-backend)
-[![Heroku](https://heroku-badge.herokuapp.com/?app=fmt-reversi)]
+[![Heroku App Status](http://heroku-shields.herokuapp.com/fmt-reversi)](https://fmt-reversi.herokuapp.com)
 
 # reversi-backend
 Backend server for reversi matchStatus
@@ -21,3 +21,5 @@ Spring boot config
  
  Rest 
  - https://spring.io/guides/tutorials/rest/
+ 
+ http://heroku-shields.herokuapp.com/
