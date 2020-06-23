@@ -1,7 +1,7 @@
 package org.abubusoft.reversi.server.web.controllers;
 
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
-import org.abubusoft.reversi.server.messages.MatchMoveMessage;
+import org.abubusoft.reversi.messages.MatchMoveMessage;
 import org.abubusoft.reversi.server.services.GameService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

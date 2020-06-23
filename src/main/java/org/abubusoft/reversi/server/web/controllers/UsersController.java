@@ -2,7 +2,7 @@ package org.abubusoft.reversi.server.web.controllers;
 
 import org.abubusoft.reversi.server.model.MatchStatus;
 import org.abubusoft.reversi.server.model.User;
-import org.abubusoft.reversi.server.model.UserRegistration;
+import org.abubusoft.reversi.messages.ConnectedUserMessage;
 import org.abubusoft.reversi.server.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,8 +23,8 @@ public class UsersController {
   }
 
   @PostMapping()
-  public ResponseEntity<User> add(@RequestBody UserRegistration userRegistration) {
-    return ResponseEntity.ok(gameService.saveUser(userRegistration));
+  public ResponseEntity<User> add(@RequestBody ConnectedUserMessage connectedUserMessage) {
+    return ResponseEntity.ok(gameService.saveUser(connectedUserMessage));
   }
 
   @PatchMapping("/{uuid}/ready")

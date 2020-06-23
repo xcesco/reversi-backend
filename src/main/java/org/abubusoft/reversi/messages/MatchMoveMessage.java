@@ -1,4 +1,4 @@
-package org.abubusoft.reversi.server.messages;
+package org.abubusoft.reversi.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

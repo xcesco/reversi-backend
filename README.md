@@ -23,3 +23,15 @@ Spring boot config
  - https://spring.io/guides/tutorials/rest/
  
  http://heroku-shields.herokuapp.com/
+ 
+ NGROK
+ - https://gist.github.com/wosephjeber/aa174fb851dfe87e644e
+ - https://dashboard.ngrok.com/get-started/setup
+
+Config file is store on .ngrok2/ngrok.yml. 
+ngrok exposes local networked services behinds NATs and firewalls to the
+public internet over a secure tunnel. Share local websites, build/test
+webhook consumers and self-host personal services.
+Detailed help for each command is available with 'ngrok help <command>'.
+Open http://localhost:4040 for ngrok's web interface to inspect traffic.
+

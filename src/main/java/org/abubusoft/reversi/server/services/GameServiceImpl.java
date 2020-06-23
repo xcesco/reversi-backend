@@ -7,9 +7,10 @@ import org.abubusoft.reversi.server.events.MatchEndEvent;
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.server.events.MatchStartEvent;
 import org.abubusoft.reversi.server.events.MatchStatusEvent;
-import org.abubusoft.reversi.server.messages.MatchEndMessage;
-import org.abubusoft.reversi.server.messages.MatchMoveMessage;
-import org.abubusoft.reversi.server.messages.MatchStartMessage;
+import org.abubusoft.reversi.messages.MatchEndMessage;
+import org.abubusoft.reversi.messages.MatchMoveMessage;
+import org.abubusoft.reversi.messages.MatchStartMessage;
+import org.abubusoft.reversi.messages.ConnectedUserMessage;
 import org.abubusoft.reversi.server.model.*;
 import org.abubusoft.reversi.server.repositories.MatchStatusRepository;
 import org.abubusoft.reversi.server.repositories.UserRepository;
@@ -160,9 +161,9 @@ public class GameServiceImpl implements GameService {
   }
 
   @Override
-  public User saveUser(UserRegistration userRegistration) {
+  public User saveUser(ConnectedUserMessage connectedUserMessage) {
     User user = new User();
-    user.setName(userRegistration.getName());
+    user.setName(connectedUserMessage.getName());
     user.setStatus(UserStatus.NOT_READY_TO_PLAY);
     return userRepository.save(user);
   }

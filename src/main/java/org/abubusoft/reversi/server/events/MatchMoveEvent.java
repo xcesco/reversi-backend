@@ -1,6 +1,6 @@
 package org.abubusoft.reversi.server.events;
 
-import org.abubusoft.reversi.server.messages.MatchMoveMessage;
+import org.abubusoft.reversi.messages.MatchMoveMessage;
 
 public class MatchMoveEvent extends AppEvent {
 

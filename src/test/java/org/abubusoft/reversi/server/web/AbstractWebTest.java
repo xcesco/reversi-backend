@@ -6,7 +6,7 @@ import it.fmt.games.reversi.model.Piece;
 import org.abubusoft.reversi.server.JSONMapperUtils;
 import org.abubusoft.reversi.server.WebSocketConfig;
 import org.abubusoft.reversi.server.exceptions.AppRuntimeException;
-import org.abubusoft.reversi.server.messages.MatchMoveMessage;
+import org.abubusoft.reversi.messages.MatchMoveMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -42,13 +42,11 @@ import static org.abubusoft.reversi.server.ReversiServerApplication.MATCH_EXECUT
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public abstract class AbstractWebTest {
+public abstract class AbstractWebTest implements StompSender {
   protected WebSocketStompClient stompClient;
   protected StompSession stompSession;
   protected String baseUrl;
   protected String websocketBaseUrl;
-
-  //protected CompletableFuture<Greeting> completableFuture;
 
   protected List<Transport> createTransportClient() {
     List<Transport> transports = new ArrayList<>(1);
@@ -56,13 +54,12 @@ public abstract class AbstractWebTest {
     return transports;
   }
 
-  protected abstract Type onPayLoadType(StompHeaders headers);
-  protected abstract void onHandleFrame(StompHeaders headers, Object payload);
-  protected abstract void onAfterConnected(StompSession session, StompHeaders connectedHeaders);
+  protected abstract Type onSessionPayLoadType(StompHeaders headers);
+  protected abstract void onSessionHandleFrame(StompHeaders headers, Object payload);
+  protected abstract void onSessionAfterConnected(StompSession session, StompHeaders connectedHeaders);
 
   @BeforeEach
-  public void setup() throws InterruptedException, ExecutionException, TimeoutException {
-   // completableFuture = new CompletableFuture<>();
+  public void setup()  {
   }
 
   protected void connectOnWebsocket() throws InterruptedException, ExecutionException, TimeoutException {
@@ -83,17 +80,17 @@ public abstract class AbstractWebTest {
 
       @Override
       public Type getPayloadType(StompHeaders headers) {
-        return onPayLoadType(headers);
+        return onSessionPayLoadType(headers);
       }
 
       @Override
       public void handleFrame(StompHeaders headers, Object payload) {
-        onHandleFrame(headers, payload);
+        onSessionHandleFrame(headers, payload);
       }
 
       @Override
       public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        onAfterConnected(session, connectedHeaders);
+        onSessionAfterConnected(session, connectedHeaders);
       }
     }).get(1, SECONDS);
   }
@@ -105,10 +102,10 @@ public abstract class AbstractWebTest {
     websocketBaseUrl = "ws://localhost:" + port + WebSocketConfig.WE_ENDPOINT;
   }
 
-  public void sendMatchMove(UUID playerUUID, Piece piece, UUID matchUID, Coordinates move) {
-    String url="/app/users/"+playerUUID+"/moves";
+  public void sendMatchMove(UUID playerId, Piece piece, UUID matchId, Coordinates move) {
+    String url="/app/users/"+playerId+"/moves";
     logger.info("send info to {}", url);
-    stompSession.send(url, MatchMoveMessage.of(matchUID, playerUUID, piece, move));
+    stompSession.send(url, MatchMoveMessage.of(matchId, playerId, piece, move));
   }
 
   @Autowired
@@ -117,7 +114,7 @@ public abstract class AbstractWebTest {
   }
 
 
-  Logger logger = LoggerFactory.getLogger(OnePlayerGameTest.class);
+  Logger logger = LoggerFactory.getLogger(MatchSimulatinoTest.class);
   @LocalServerPort
   protected int port;
 

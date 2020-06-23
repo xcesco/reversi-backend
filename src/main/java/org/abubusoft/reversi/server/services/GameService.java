@@ -2,14 +2,14 @@ package org.abubusoft.reversi.server.services;
 
 import org.abubusoft.reversi.server.model.MatchStatus;
 import org.abubusoft.reversi.server.model.User;
-import org.abubusoft.reversi.server.model.UserRegistration;
+import org.abubusoft.reversi.messages.ConnectedUserMessage;
 
 import java.util.UUID;
 
 public interface GameService {
   Iterable<MatchStatus> findAllUMatchStatus();
 
-  User saveUser(UserRegistration userRegistration);
+  User saveUser(ConnectedUserMessage connectedUserMessage);
 
   Iterable<User> findAllUsers();
 
