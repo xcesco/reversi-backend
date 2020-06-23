@@ -17,7 +17,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.abubusoft.reversi.server.ReversiServerApplication.GAME_EXECUTOR;
+import static org.abubusoft.reversi.server.ReversiServerApplication.MATCH_EXECUTOR;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
@@ -29,7 +29,7 @@ public class ReadyToPlayTest {
   @LocalServerPort
   private int port;
 
-  @Qualifier(GAME_EXECUTOR)
+  @Qualifier(MATCH_EXECUTOR)
   @Autowired
   private ThreadPoolTaskExecutor executor;
 

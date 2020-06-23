@@ -1,5 +1,6 @@
 package org.abubusoft.reversi.server.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.fmt.games.reversi.model.GameSnapshot;
 import org.abubusoft.reversi.server.repositories.support.GameSnaphostJpaConverterJson;
 
@@ -30,6 +31,7 @@ public class MatchStatus extends AbstractBaseEntity {
     return Objects.hash(super.hashCode(), snapshot, users);
   }
 
+  @JsonIgnore
   @JoinColumn(name = "match_id")
   @OneToMany
   private List<User> users = new ArrayList<>();

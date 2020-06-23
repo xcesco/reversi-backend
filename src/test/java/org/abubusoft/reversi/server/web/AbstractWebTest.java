@@ -1,8 +1,12 @@
 package org.abubusoft.reversi.server.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.fmt.games.reversi.model.Coordinates;
+import it.fmt.games.reversi.model.Piece;
+import org.abubusoft.reversi.server.JSONMapperUtils;
 import org.abubusoft.reversi.server.WebSocketConfig;
-import org.abubusoft.reversi.server.messages.Greeting;
+import org.abubusoft.reversi.server.exceptions.AppRuntimeException;
+import org.abubusoft.reversi.server.messages.MatchMove;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -13,11 +17,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -28,14 +32,14 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.abubusoft.reversi.server.ReversiServerApplication.GAME_EXECUTOR;
+import static org.abubusoft.reversi.server.ReversiServerApplication.MATCH_EXECUTOR;
 
-@ActiveProfiles("test")
+
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class AbstractWebTest {
@@ -44,7 +48,7 @@ public abstract class AbstractWebTest {
   protected String baseUrl;
   protected String websocketBaseUrl;
 
-  protected CompletableFuture<Greeting> completableFuture;
+  //protected CompletableFuture<Greeting> completableFuture;
 
   protected List<Transport> createTransportClient() {
     List<Transport> transports = new ArrayList<>(1);
@@ -58,13 +62,25 @@ public abstract class AbstractWebTest {
 
   @BeforeEach
   public void setup() throws InterruptedException, ExecutionException, TimeoutException {
-    completableFuture = new CompletableFuture<>();
+   // completableFuture = new CompletableFuture<>();
   }
 
   protected void connectOnWebsocket() throws InterruptedException, ExecutionException, TimeoutException {
     stompClient = new WebSocketStompClient(new SockJsClient(createTransportClient()));
-    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+    MappingJackson2MessageConverter mappingJackson2MessageConverter=new MappingJackson2MessageConverter();
+    mappingJackson2MessageConverter.setObjectMapper(JSONMapperUtils.createMapper());
+    stompClient.setMessageConverter(mappingJackson2MessageConverter);
     stompSession = stompClient.connect(websocketBaseUrl, new StompSessionHandlerAdapter() {
+      @Override
+      public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+        throw new AppRuntimeException(exception.getMessage());
+      }
+
+      @Override
+      public void handleTransportError(StompSession session, Throwable exception) {
+        throw new AppRuntimeException(exception.getMessage());
+      }
+
       @Override
       public Type getPayloadType(StompHeaders headers) {
         return onPayLoadType(headers);
@@ -89,6 +105,12 @@ public abstract class AbstractWebTest {
     websocketBaseUrl = "ws://localhost:" + port + WebSocketConfig.WE_ENDPOINT;
   }
 
+  public void sendMatchMove(UUID playerUUID, Piece piece, UUID matchUID, Coordinates move) {
+    String url="/app/users/"+playerUUID+"/moves";
+    logger.info("send info to {}", url);
+    stompSession.send(url, MatchMove.of(matchUID, playerUUID, piece, move));
+  }
+
   @Autowired
   public void setObjectMapper(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
@@ -104,7 +126,7 @@ public abstract class AbstractWebTest {
   @Autowired
   protected TestRestTemplate restTemplate;
 
-  @Qualifier(GAME_EXECUTOR)
+  @Qualifier(MATCH_EXECUTOR)
   @Autowired
   protected ThreadPoolTaskExecutor executor;
 }

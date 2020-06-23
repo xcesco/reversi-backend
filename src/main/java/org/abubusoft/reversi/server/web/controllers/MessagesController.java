@@ -1,20 +1,18 @@
 package org.abubusoft.reversi.server.web.controllers;
 
+import org.abubusoft.reversi.server.events.MatchMoveEvent;
+import org.abubusoft.reversi.server.messages.MatchMove;
 import org.abubusoft.reversi.server.services.GameService;
-import org.abubusoft.reversi.server.messages.Greeting;
-import org.abubusoft.reversi.server.messages.Hello;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.util.HtmlUtils;
-
-import static org.abubusoft.reversi.server.WebSocketConfig.TOPIC_PREFIX;
 
 @Controller
 public class MessagesController {
+  private ApplicationEventPublisher applicationEventPublisher;
 
   private static Logger logger = LoggerFactory.getLogger(MessagesController.class);
 
@@ -22,7 +20,8 @@ public class MessagesController {
 
   private final GameService gameService;
 
-  public MessagesController(GameService gameService) {
+  public MessagesController(ApplicationEventPublisher applicationEventPublisher, GameService gameService) {
+    this.applicationEventPublisher = applicationEventPublisher;
     this.gameService = gameService;
   }
 
@@ -49,12 +48,15 @@ public class MessagesController {
 //  }
 //
 
-  @MessageMapping(GREETINGS + "{uuid}")
-  @SendTo(TOPIC_PREFIX + "/users/{uuid}")
-  public Hello greeting(@DestinationVariable String uuid, Greeting message) throws Exception {
-    gameService.saveUser(null);
-    logger.info("[GREETINGS] {} {}", message.getMessage(), uuid);
-    return Hello.of("Hello, " + HtmlUtils.htmlEscape(message.getMessage()) + " " + uuid + "!");
+  @MessageMapping("/users/{uuid}/moves")
+  //@SendTo(TOPIC_PREFIX + "/users/{uuid}")
+  public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMove move) throws Exception {
+    if (userUUID.equals(move.getPlayerUUID().toString())) {
+      applicationEventPublisher.publishEvent(new MatchMoveEvent(move));
+    } else {
+      logger.warn("something is strange");
+    }
+   // return Hello.of("Hello, " + HtmlUtils.htmlEscape(message.getMessage()) + " " + uuid + "!");
   }
 
 }

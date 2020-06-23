@@ -20,7 +20,6 @@ public abstract class AbstractBaseEntity implements Persistable<UUID> {
 
   public AbstractBaseEntity(UUID id) {
     this.id = id != null ? id : UUID.randomUUID();
-    this.persisted = id != null;
   }
 
   @Override

@@ -179,7 +179,7 @@
         <dependency>
             <groupId>it.fmt.games.reversi</groupId>
             <artifactId>reversi-core</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.2</version>
         </dependency>
     </dependencies>
 

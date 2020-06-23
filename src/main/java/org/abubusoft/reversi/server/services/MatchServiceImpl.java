@@ -4,9 +4,10 @@ import it.fmt.games.reversi.GameRenderer;
 import it.fmt.games.reversi.Reversi;
 import it.fmt.games.reversi.UserInputReader;
 import it.fmt.games.reversi.model.*;
+import org.abubusoft.reversi.server.events.MatchEndEvent;
+import org.abubusoft.reversi.server.events.MatchStartEvent;
 import org.abubusoft.reversi.server.events.MatchStatusEvent;
 import org.abubusoft.reversi.server.exceptions.AppPlayerTimeoutException;
-import org.abubusoft.reversi.server.model.AbstractBaseEntity;
 import org.abubusoft.reversi.server.model.MatchStatus;
 import org.abubusoft.reversi.server.model.NetworkPlayer1;
 import org.abubusoft.reversi.server.model.NetworkPlayer2;
@@ -18,15 +19,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.util.Pair;
 
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
-public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance, GameRenderer {
+public class MatchServiceImpl implements MatchService, GameRenderer {
+  private final UUID id = UUID.randomUUID();
   private final NetworkPlayer1 player1;
   private final NetworkPlayer2 player2;
-  private static final Logger logger = LoggerFactory.getLogger(GameInstanceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(MatchServiceImpl.class);
 
-  BlockingQueue<Pair<Player, Coordinates>> movesQueue = new LinkedBlockingQueue<>();
+  private final BlockingQueue<Pair<Player, Coordinates>> movesQueue;
 
   @Autowired
   public void setUserInputReaderProvider(ObjectProvider<UserInputReader> userInputReaderProvider) {
@@ -48,10 +50,15 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
 
   private GameSnapshot gameSnapshot;
 
-  public GameInstanceImpl(NetworkPlayer1 player1, NetworkPlayer2 player2) {
-    super(null);
+  public MatchServiceImpl(NetworkPlayer1 player1, NetworkPlayer2 player2, BlockingQueue<Pair<Player, Coordinates>> movesQueue) {
     this.player1 = player1;
     this.player2 = player2;
+    this.movesQueue = movesQueue;
+  }
+
+  @Override
+  public UUID getId() {
+    return id;
   }
 
   @Override
@@ -66,9 +73,10 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
   @Override
   public void play() {
     UserInputReader inputReader = userInputReaderProvider.getObject(movesQueue, turnTimeout);
-    NetworkGameLogicImpl gameLogic = new NetworkGameLogicImpl(player1, player2, inputReader);
+    GameLogic gameLogic = new GameLogicImpl(player1, player2, inputReader);
     reversi = new Reversi(this, gameLogic);
 
+    applicationEventPublisher.publishEvent(new MatchStartEvent(getId(), player1.getUserId(), player2.getUserId()));
     try {
       reversi.play();
     } catch (AppPlayerTimeoutException e) {
@@ -80,6 +88,8 @@ public class GameInstanceImpl extends AbstractBaseEntity implements GameInstance
               e.getPlayer().getPiece() == Piece.PLAYER_1 ? GameStatus.PLAYER2_WIN : GameStatus.PLAYER1_WIN);
 
       applicationEventPublisher.publishEvent(new MatchStatusEvent(player1, player2, MatchStatus.of(getId(), timeoutGameSnapshot)));
+    } finally {
+      applicationEventPublisher.publishEvent(new MatchEndEvent(getId(), player1.getUserId(), player2.getUserId()));
     }
   }
 
