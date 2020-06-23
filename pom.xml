@@ -48,13 +48,11 @@
         <repository>
             <id>central</id>
             <url>https://repo1.maven.org/maven2</url>
-            <releases><enabled>true</enabled></releases>
-            <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
-            <id>github</id>
-            <name>GitHub xcesco Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/xcesco/releases</url>
+            <id>dl.bintray</id>
+            <name>dl.bintray</name>
+            <url>https://dl.bintray.com/xcesco/reversi</url>
         </repository>
     </repositories>
 
