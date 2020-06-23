@@ -1,7 +1,7 @@
 package org.abubusoft.reversi.server.web.controllers;
 
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
-import org.abubusoft.reversi.server.messages.MatchMove;
+import org.abubusoft.reversi.server.messages.MatchMoveMessage;
 import org.abubusoft.reversi.server.services.GameService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class MessagesController {
 
   @MessageMapping("/users/{uuid}/moves")
   //@SendTo(TOPIC_PREFIX + "/users/{uuid}")
-  public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMove move) throws Exception {
+  public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMoveMessage move) throws Exception {
     if (userUUID.equals(move.getPlayerUUID().toString())) {
       applicationEventPublisher.publishEvent(new MatchMoveEvent(move));
     } else {

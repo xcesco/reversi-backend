@@ -8,7 +8,7 @@ import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.server.events.MatchStartEvent;
 import org.abubusoft.reversi.server.events.MatchStatusEvent;
 import org.abubusoft.reversi.server.messages.MatchEndMessage;
-import org.abubusoft.reversi.server.messages.MatchMove;
+import org.abubusoft.reversi.server.messages.MatchMoveMessage;
 import org.abubusoft.reversi.server.messages.MatchStartMessage;
 import org.abubusoft.reversi.server.model.*;
 import org.abubusoft.reversi.server.repositories.MatchStatusRepository;
@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -99,14 +100,26 @@ public class GameServiceImpl implements GameService {
   public void onMatchEnd(MatchEndEvent event) {
     logger.info("MatchEndEvent {}", event.getMatchUUID());
 
-    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(event.getMatchUUID(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getMatchUUID(), Piece.PLAYER_2));
+    MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
+
+    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_1));
+    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_2));
+
+    List<User> users = matchStatus.getUsers();
+    for (User user:users) {
+      User player = userRepository.findById(user.getId()).orElse(null);
+      player.setStatus(UserStatus.NOT_READY_TO_PLAY);
+      player.setMatchStatus(null);
+      userRepository.save(player);
+    }
+
+    matchStatusRepository.delete(matchStatus);
   }
 
   @EventListener
   @Transactional
   public void onPlayerMove(MatchMoveEvent event) {
-    MatchMove move = event.getMove();
+    MatchMoveMessage move = event.getMove();
     logger.info("On match {}, player {} moves {}", move.getMatchUUID(), move.getPlayerPiece(), move.getMove());
     if (matchMovesQueues.containsKey(move.getMatchUUID())) {
       matchMovesQueues.get(move.getMatchUUID()).add(Pair.of(move.getPlayerPiece(), move.getMove()));
@@ -121,11 +134,12 @@ public class GameServiceImpl implements GameService {
     logger.info("onMatchStatusChanges {}", event.getMatchStatus());
 
     // update snapshot
-    MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchStatus().getId()).orElse(event.getMatchStatus());
-    matchStatus.setSnapshot(event.getMatchStatus().getSnapshot());
-    matchStatus = matchStatusRepository.save(matchStatus);
-
     GameSnapshot snapshot = event.getMatchStatus().getSnapshot();
+    MatchStatus matchStatus = matchStatusRepository
+            .findById(event.getMatchStatus().getId())
+            .orElse(event.getMatchStatus());
+    matchStatus.setSnapshot(snapshot);
+    matchStatus = matchStatusRepository.save(matchStatus);
 
     //UUID currentPlayer = event.getMatchStatus().getSnapshot().getActivePiece()
     sendToUser(event.getPlayer1().getUserId(), matchStatus.getSnapshot());

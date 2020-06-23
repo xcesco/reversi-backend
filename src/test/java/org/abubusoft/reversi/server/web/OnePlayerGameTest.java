@@ -1,6 +1,5 @@
 package org.abubusoft.reversi.server.web;
 
-import it.fmt.games.reversi.Player1;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.Piece;
 import org.abubusoft.reversi.server.messages.MatchEndMessage;
@@ -51,8 +50,6 @@ public class OnePlayerGameTest extends AbstractWebTest {
     assert user2 != null;
     user2 = restTemplate.patchForObject(baseUrl + String.format("api/v1/public/users/%s/ready", user2.getId()), HttpMethod.PUT, User.class);
 
-    //logger.info(objectMapper.writeValueAsString(user1));
-    //logger.info(objectMapper.writeValueAsString(user2));
     assertNotNull(user1.getId());
     assertNotNull(user2.getId());
 
@@ -115,11 +112,11 @@ public class OnePlayerGameTest extends AbstractWebTest {
         break;
         case "GameSnapshot": {
           GameSnapshot gameSnapshot = (GameSnapshot) o;
-          if (user1TopicUrl.equals(destination) && gameSnapshot.getActivePiece()== Piece.PLAYER_1 && gameSnapshot.getAvailableMoves().getMovesActivePlayer().size()>0) {
+          if (user1TopicUrl.equals(destination) && gameSnapshot.getActivePiece() == Piece.PLAYER_1 && gameSnapshot.getAvailableMoves().getMovesActivePlayer().size() > 0) {
             logger.info("user {} can moves: {}", gameSnapshot.getActivePiece(), gameSnapshot.getAvailableMoves().getMovesActivePlayer());
             assertNotNull(gameSnapshot);
             sendMatchMove(user1.getId(), Piece.PLAYER_1, matchUUID, gameSnapshot.getAvailableMoves().getMovesActivePlayer().get(0));
-          } else if (user2TopicUrl.equals(destination) && gameSnapshot.getActivePiece()== Piece.PLAYER_2 && gameSnapshot.getAvailableMoves().getMovesActivePlayer().size()>0) {
+          } else if (user2TopicUrl.equals(destination) && gameSnapshot.getActivePiece() == Piece.PLAYER_2 && gameSnapshot.getAvailableMoves().getMovesActivePlayer().size() > 0) {
             //logger.info("user 2 received message: {}", o);
             logger.info("user {} can moves: {}", gameSnapshot.getActivePiece(), gameSnapshot.getAvailableMoves().getMovesActivePlayer());
             assertNotNull(gameSnapshot);

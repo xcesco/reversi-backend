@@ -7,13 +7,13 @@ import it.fmt.games.reversi.model.Piece;
 
 import java.util.UUID;
 
-public class MatchMove {
+public class MatchMoveMessage {
 
   @JsonCreator
-  public MatchMove(@JsonProperty("matchUUID") UUID matchUUID,
-                   @JsonProperty("playerUUID") UUID playerUUID,
-                   @JsonProperty("playerPiece") Piece playerPiece,
-                   @JsonProperty("move") Coordinates move) {
+  public MatchMoveMessage(@JsonProperty("matchUUID") UUID matchUUID,
+                          @JsonProperty("playerUUID") UUID playerUUID,
+                          @JsonProperty("playerPiece") Piece playerPiece,
+                          @JsonProperty("move") Coordinates move) {
     this.playerUUID = playerUUID;
     this.playerPiece = playerPiece;
     this.move = move;
@@ -42,7 +42,7 @@ public class MatchMove {
   private final Coordinates move;
   private final UUID matchUUID;
 
-  public static MatchMove of(UUID matchUUID, UUID playerUUID, Piece playerPiece, Coordinates move) {
-    return new MatchMove(matchUUID, playerUUID, playerPiece, move);
+  public static MatchMoveMessage of(UUID matchUUID, UUID playerUUID, Piece playerPiece, Coordinates move) {
+    return new MatchMoveMessage(matchUUID, playerUUID, playerPiece, move);
   }
 }
