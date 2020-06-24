@@ -1,7 +1,7 @@
 package org.abubusoft.reversi.server.web.controllers;
 
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
-import org.abubusoft.reversi.messages.MatchMoveMessage;
+import org.abubusoft.reversi.messages.MatchMove;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,7 +19,7 @@ public class MessagesController {
   }
 
   @MessageMapping(WebPathConstants.WS_USER_TOPIC)
-  public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMoveMessage move) {
+  public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMove move) {
     if (userUUID.equals(move.getPlayerUUID().toString())) {
       applicationEventPublisher.publishEvent(new MatchMoveEvent(move));
     } else {

@@ -6,7 +6,7 @@ import it.fmt.games.reversi.model.Piece;
 import org.abubusoft.reversi.server.JSONMapperUtils;
 import org.abubusoft.reversi.server.WebSocketConfig;
 import org.abubusoft.reversi.server.exceptions.AppRuntimeException;
-import org.abubusoft.reversi.messages.MatchMoveMessage;
+import org.abubusoft.reversi.messages.MatchMove;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -106,7 +106,7 @@ public abstract class AbstractWebTest implements StompSender {
   public void sendMatchMove(UUID playerId, Piece piece, UUID matchId, Coordinates move) {
     String url="/app/users/"+playerId+"/moves";
     logger.debug("send info to {}", url);
-    stompSession.send(url, MatchMoveMessage.of(matchId, playerId, piece, move));
+    stompSession.send(url, MatchMove.of(matchId, playerId, piece, move));
   }
 
   @Autowired

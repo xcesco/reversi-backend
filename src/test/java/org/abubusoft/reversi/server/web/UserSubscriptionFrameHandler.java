@@ -4,8 +4,8 @@ import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.GameStatus;
 import it.fmt.games.reversi.model.Piece;
-import org.abubusoft.reversi.messages.MatchEndMessage;
-import org.abubusoft.reversi.messages.MatchStartMessage;
+import org.abubusoft.reversi.messages.MatchEnd;
+import org.abubusoft.reversi.messages.MatchStart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -45,9 +45,9 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
       case "GameSnapshot":
         return GameSnapshot.class;
       case "MatchStartMessage":
-        return MatchStartMessage.class;
+        return MatchStart.class;
       case "MatchEndMessage":
-        return MatchEndMessage.class;
+        return MatchEnd.class;
     }
 
     return GameSnapshot.class;
@@ -59,10 +59,10 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
 
     switch (Objects.requireNonNull(stompHeaders.getFirst(HEADER_TYPE))) {
       case "MatchStartMessage": {
-        MatchStartMessage matchStartMessage = (MatchStartMessage) o;
+        MatchStart matchStart = (MatchStart) o;
         if (userTopicUrl.equals(destination)) {
-          matchId = matchStartMessage.getMatchUUID();
-          assertNotNull(matchStartMessage);
+          matchId = matchStart.getMatchUUID();
+          assertNotNull(matchStart);
         }
       }
       break;
@@ -85,8 +85,8 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
       }
       break;
       case "MatchEndMessage": {
-        MatchEndMessage matchEndMessage = (MatchEndMessage) o;
-        assertNotNull(matchEndMessage);
+        MatchEnd matchEnd = (MatchEnd) o;
+        assertNotNull(matchEnd);
         logger.debug("player {} receives match end", userPiece);
         matchId =null;
       }

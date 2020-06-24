@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 
-public class ConnectedUserMessage implements Serializable {
+public class ConnectedUser implements Serializable {
   @JsonCreator
-  public ConnectedUserMessage(@JsonProperty("name") String name) {
+  public ConnectedUser(@JsonProperty("name") String name) {
     this.name = name;
   }
 

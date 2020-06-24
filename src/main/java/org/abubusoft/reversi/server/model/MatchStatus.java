@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import it.fmt.games.reversi.model.GameSnapshot;
 import org.abubusoft.reversi.server.repositories.support.GameSnaphostJpaConverterJson;
@@ -22,9 +21,7 @@ public class MatchStatus extends AbstractBaseEntity {
   @Convert(converter = GameSnaphostJpaConverterJson.class)
   private GameSnapshot snapshot;
 
-  // generates "yyyy-MM-dd" output
   @JsonSerialize(using = ToStringSerializer.class)
-// handles "yyyy-MM-dd" input just fine (note: "yyyy-M-d" format will not work)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
   private LocalDateTime finishDateTime;
   @JsonIgnore

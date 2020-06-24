@@ -7,10 +7,10 @@ import org.abubusoft.reversi.server.events.MatchEndEvent;
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.server.events.MatchStartEvent;
 import org.abubusoft.reversi.server.events.MatchStatusEvent;
-import org.abubusoft.reversi.messages.MatchEndMessage;
-import org.abubusoft.reversi.messages.MatchMoveMessage;
-import org.abubusoft.reversi.messages.MatchStartMessage;
-import org.abubusoft.reversi.messages.ConnectedUserMessage;
+import org.abubusoft.reversi.messages.MatchEnd;
+import org.abubusoft.reversi.messages.MatchMove;
+import org.abubusoft.reversi.messages.MatchStart;
+import org.abubusoft.reversi.messages.ConnectedUser;
 import org.abubusoft.reversi.server.model.*;
 import org.abubusoft.reversi.server.repositories.MatchStatusRepository;
 import org.abubusoft.reversi.server.repositories.UserRepository;
@@ -93,8 +93,8 @@ public class GameServiceImpl implements GameService {
   public void onMatchStart(MatchStartEvent event) {
     logger.debug("onMatchStart {}", event.getMatchUUID());
 
-    sendToUser(event.getPlayer1UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_2));
+    sendToUser(event.getPlayer1UUID(), new MatchStart(event.getMatchUUID(), Piece.PLAYER_1));
+    sendToUser(event.getPlayer2UUID(), new MatchStart(event.getMatchUUID(), Piece.PLAYER_2));
   }
 
   @EventListener
@@ -107,8 +107,8 @@ public class GameServiceImpl implements GameService {
 
     MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
 
-    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_2));
+    sendToUser(event.getPlayer1UUID(), new MatchEnd(matchStatus.getId(), Piece.PLAYER_1));
+    sendToUser(event.getPlayer2UUID(), new MatchEnd(matchStatus.getId(), Piece.PLAYER_2));
 
     List<User> users = matchStatus.getUsers();
     for (User user:users) {
@@ -125,7 +125,7 @@ public class GameServiceImpl implements GameService {
   @EventListener
   @Transactional
   public void onPlayerMove(MatchMoveEvent event) {
-    MatchMoveMessage move = event.getMove();
+    MatchMove move = event.getMove();
     logger.debug("On match {}, player {} moves {}", move.getMatchUUID(), move.getPlayerPiece(), move.getMove());
     if (matchMovesQueues.containsKey(move.getMatchUUID())) {
       matchMovesQueues.get(move.getMatchUUID()).add(Pair.of(move.getPlayerPiece(), move.getMove()));
@@ -167,9 +167,9 @@ public class GameServiceImpl implements GameService {
   }
 
   @Override
-  public User saveUser(ConnectedUserMessage connectedUserMessage) {
+  public User saveUser(ConnectedUser connectedUser) {
     User user = new User();
-    user.setName(connectedUserMessage.getName());
+    user.setName(connectedUser.getName());
     user.setStatus(UserStatus.NOT_READY_TO_PLAY);
     return userRepository.save(user);
   }

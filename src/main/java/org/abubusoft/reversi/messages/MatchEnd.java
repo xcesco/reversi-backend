@@ -7,12 +7,12 @@ import it.fmt.games.reversi.model.Piece;
 import java.io.Serializable;
 import java.util.UUID;
 
-public class MatchStartMessage implements Serializable {
+public class MatchEnd implements Serializable {
   private final UUID matchUUID;
   private final Piece piece;
 
   @JsonCreator
-  public MatchStartMessage(@JsonProperty("matchUUID") UUID matchUUID, @JsonProperty("piece") Piece piece) {
+  public MatchEnd(@JsonProperty("matchUUID") UUID matchUUID, @JsonProperty("piece") Piece piece) {
     this.matchUUID = matchUUID;
     this.piece = piece;
   }
