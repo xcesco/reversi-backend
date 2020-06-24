@@ -1,5 +1,6 @@
 package org.abubusoft.reversi.server.web;
 
+import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.GameStatus;
 import it.fmt.games.reversi.model.Piece;
@@ -22,8 +23,14 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
   private final String userTopicUrl;
   private final StompSender stompSender;
   private final Piece userPiece;
-  private UUID matchUUID;
+  private UUID matchId;
   private static final Logger logger = LoggerFactory.getLogger(UserSubscriptionFrameHandler.class);
+
+  public GameStatus getResult() {
+    return result;
+  }
+
+  private GameStatus result;
 
   public UserSubscriptionFrameHandler(UUID userId, Piece userPiece, StompSender stompSender) {
     this.userTopicUrl = StompSender.buildUserTopic(userId);
@@ -54,7 +61,7 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
       case "MatchStartMessage": {
         MatchStartMessage matchStartMessage = (MatchStartMessage) o;
         if (userTopicUrl.equals(destination)) {
-          matchUUID = matchStartMessage.getMatchUUID();
+          matchId = matchStartMessage.getMatchUUID();
           assertNotNull(matchStartMessage);
         }
       }
@@ -62,25 +69,28 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
       case "GameSnapshot": {
         GameSnapshot gameSnapshot = (GameSnapshot) o;
         if (userTopicUrl.equals(destination) && gameSnapshot.getActivePiece() == userPiece && gameSnapshot.getAvailableMoves().getMovesActivePlayer().size() > 0) {
-          logger.info("user {} can moves: {}", gameSnapshot.getActivePiece(), gameSnapshot.getAvailableMoves().getMovesActivePlayer());
+          logger.debug("user {} can moves: {}", gameSnapshot.getActivePiece(), gameSnapshot.getAvailableMoves().getMovesActivePlayer());
           assertNotNull(gameSnapshot);
-          stompSender.sendMatchMove(userId, userPiece, matchUUID, gameSnapshot.getAvailableMoves().getMovesActivePlayer().get(0));
+          Coordinates move = gameSnapshot.getAvailableMoves().getMovesActivePlayer().get(0);
+          logger.debug("user {} decides to move on {}", gameSnapshot.getActivePiece(), move);
+          stompSender.sendMatchMove(userId, userPiece, matchId, move);
         } else if (gameSnapshot.getStatus()!= GameStatus.RUNNING) {
-          logger.info("player {} detect match has status {}, {} - {}", userPiece, gameSnapshot.getStatus(),
-                  gameSnapshot.getScore().getPlayer1Score(), gameSnapshot.getScore().getPlayer2Score()
+          logger.debug("player {} detects match has status {}, {} - {}",
+                  userPiece, gameSnapshot.getStatus(),
+                  gameSnapshot.getScore().getPlayer1Score(),
+                  gameSnapshot.getScore().getPlayer2Score()
           );
+          result = gameSnapshot.getStatus();
         }
       }
       break;
       case "MatchEndMessage": {
         MatchEndMessage matchEndMessage = (MatchEndMessage) o;
         assertNotNull(matchEndMessage);
-        matchUUID=null;
+        logger.debug("player {} receives match end", userPiece);
+        matchId =null;
       }
       break;
     }
-
-
-    // completableFuture.complete((Greeting) o);
   }
 }

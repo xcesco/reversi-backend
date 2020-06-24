@@ -80,17 +80,24 @@ public class MatchServiceImpl implements MatchService, GameRenderer {
     try {
       reversi.play();
     } catch (AppPlayerTimeoutException e) {
-      GameSnapshot timeoutGameSnapshot = new GameSnapshot(gameSnapshot.getScore(),
-              gameSnapshot.getLastMove(),
-              gameSnapshot.getActivePiece(),
-              gameSnapshot.getAvailableMoves(),
-              gameSnapshot.getBoard(),
-              e.getPlayer().getPiece() == Piece.PLAYER_1 ? GameStatus.PLAYER2_WIN : GameStatus.PLAYER1_WIN);
-
-      applicationEventPublisher.publishEvent(new MatchStatusEvent(player1, player2, MatchStatus.of(getId(), timeoutGameSnapshot)));
+      applicationEventPublisher.publishEvent(new MatchStatusEvent(player1, player2, buildMatchStatusForTimeout(e)));
     } finally {
       applicationEventPublisher.publishEvent(new MatchEndEvent(getId(), player1.getUserId(), player2.getUserId()));
     }
+  }
+
+  private MatchStatus buildMatchStatusForTimeout(AppPlayerTimeoutException e) {
+    GameStatus winner = e.getPlayer().getPiece() == Piece.PLAYER_1 ? GameStatus.PLAYER2_WIN : GameStatus.PLAYER1_WIN;
+    Score score = new Score(winner == GameStatus.PLAYER1_WIN ? gameSnapshot.getScore().getPlayer1Score() : 0,
+            winner == GameStatus.PLAYER2_WIN ? gameSnapshot.getScore().getPlayer2Score() : 0);
+    GameSnapshot timeoutGameSnapshot = new GameSnapshot(score,
+            gameSnapshot.getLastMove(),
+            gameSnapshot.getActivePiece(),
+            gameSnapshot.getAvailableMoves(),
+            gameSnapshot.getBoard(),
+            winner);
+
+    return MatchStatus.of(getId(), timeoutGameSnapshot);
   }
 
   private boolean isValidMove(Player player, Coordinates coordinates) {

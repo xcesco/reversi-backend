@@ -1,10 +1,16 @@
 package org.abubusoft.reversi.server.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import it.fmt.games.reversi.model.GameSnapshot;
 import org.abubusoft.reversi.server.repositories.support.GameSnaphostJpaConverterJson;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,21 +22,11 @@ public class MatchStatus extends AbstractBaseEntity {
   @Convert(converter = GameSnaphostJpaConverterJson.class)
   private GameSnapshot snapshot;
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    if (!super.equals(o)) return false;
-    MatchStatus that = (MatchStatus) o;
-    return Objects.equals(snapshot, that.snapshot) &&
-            Objects.equals(users, that.users);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), snapshot, users);
-  }
-
+  // generates "yyyy-MM-dd" output
+  @JsonSerialize(using = ToStringSerializer.class)
+// handles "yyyy-MM-dd" input just fine (note: "yyyy-M-d" format will not work)
+  @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+  private LocalDateTime finishDateTime;
   @JsonIgnore
   @JoinColumn(name = "match_id")
   @OneToMany
@@ -49,6 +45,30 @@ public class MatchStatus extends AbstractBaseEntity {
     matchStatus.snapshot = snapshot;
 
     return matchStatus;
+  }
+
+  public LocalDateTime getFinishDateTime() {
+    return finishDateTime;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    MatchStatus that = (MatchStatus) o;
+    return Objects.equals(snapshot, that.snapshot) &&
+            Objects.equals(finishDateTime, that.finishDateTime) &&
+            Objects.equals(users, that.users);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), snapshot, finishDateTime, users);
+  }
+
+  public void setFinishDateTime(LocalDateTime finishDateTime) {
+    this.finishDateTime = finishDateTime;
   }
 
   public List<User> getUsers() {

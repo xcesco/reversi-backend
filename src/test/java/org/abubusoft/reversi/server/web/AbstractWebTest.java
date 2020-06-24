@@ -47,6 +47,7 @@ public abstract class AbstractWebTest implements StompSender {
   protected StompSession stompSession;
   protected String baseUrl;
   protected String websocketBaseUrl;
+  protected int timeOut=15;
 
   protected List<Transport> createTransportClient() {
     List<Transport> transports = new ArrayList<>(1);
@@ -92,7 +93,7 @@ public abstract class AbstractWebTest implements StompSender {
       public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         onSessionAfterConnected(session, connectedHeaders);
       }
-    }).get(1, SECONDS);
+    }).get(10, SECONDS);
   }
 
 
@@ -104,7 +105,7 @@ public abstract class AbstractWebTest implements StompSender {
 
   public void sendMatchMove(UUID playerId, Piece piece, UUID matchId, Coordinates move) {
     String url="/app/users/"+playerId+"/moves";
-    logger.info("send info to {}", url);
+    logger.debug("send info to {}", url);
     stompSession.send(url, MatchMoveMessage.of(matchId, playerId, piece, move));
   }
 
@@ -114,7 +115,8 @@ public abstract class AbstractWebTest implements StompSender {
   }
 
 
-  Logger logger = LoggerFactory.getLogger(MatchSimulatinoTest.class);
+  Logger logger = LoggerFactory.getLogger(MatchSimulationClientSideTest.class);
+
   @LocalServerPort
   protected int port;
 

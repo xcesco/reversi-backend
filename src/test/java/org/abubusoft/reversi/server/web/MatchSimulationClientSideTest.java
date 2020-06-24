@@ -18,16 +18,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ActiveProfiles("test")
 @TestPropertySource(
         locations = "classpath:application-client.properties")
-public class MatchSimulatinoTest extends AbstractWebTest {
+public class MatchSimulationClientSideTest extends AbstractWebTest {
 
   private User user1;
   private User user2;
 
   @Test
-  public void playersAreReadyToPlay() throws Exception {
+  public void testMatch() throws Exception {
     ConnectedUserMessage user1Registration = new ConnectedUserMessage("user1");
     ConnectedUserMessage user2Registration = new ConnectedUserMessage("user1");
 
+    logger.debug("base url is {}",baseUrl);
     user1 = restTemplate.postForEntity(baseUrl + "api/v1/public/users", user1Registration, User.class).getBody();
     user2 = restTemplate.postForEntity(baseUrl + "api/v1/public/users", user2Registration, User.class).getBody();
 
@@ -42,7 +43,7 @@ public class MatchSimulatinoTest extends AbstractWebTest {
     assertNotNull(user1.getId());
     assertNotNull(user2.getId());
 
-    executor.getThreadPoolExecutor().awaitTermination(30, TimeUnit.SECONDS);
+    executor.getThreadPoolExecutor().awaitTermination(timeOut, TimeUnit.SECONDS);
   }
 
   @Override

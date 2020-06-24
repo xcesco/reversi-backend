@@ -11,35 +11,33 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@RequestMapping(value = UsersController.API_ENTRYPOINT + UsersController.USERS, produces = {MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(value = WebPathConstants.API_ENTRYPOINT + WebPathConstants.USERS_URL_SEGMENT, produces = {MediaType.APPLICATION_JSON_VALUE})
 @RestController
 public class UsersController {
-  public static final String API_ENTRYPOINT = "/api/v1/public";
-  public static final String USERS = "/users";
   private final GameService gameService;
 
   public UsersController(@Autowired GameService gameService) {
     this.gameService = gameService;
   }
 
-  @PostMapping()
+  @PostMapping
   public ResponseEntity<User> add(@RequestBody ConnectedUserMessage connectedUserMessage) {
     return ResponseEntity.ok(gameService.saveUser(connectedUserMessage));
   }
 
-  @PatchMapping("/{uuid}/ready")
-  public User ready2Play(@PathVariable("uuid") UUID userUUID) {
-    return gameService.readyToPlay(userUUID);
+  @PatchMapping(WebPathConstants.USER_READY_URL_SEGMENT)
+  public ResponseEntity<User> ready2Play(@PathVariable("uuid") UUID userUUID) {
+    return ResponseEntity.ok(gameService.readyToPlay(userUUID));
   }
 
-  @PatchMapping("/{uuid}/not-ready")
-  public User notReady2Play(@PathVariable("uuid") UUID userUUID) {
-    return gameService.stopPlaying(userUUID);
+  @PatchMapping(WebPathConstants.USER_NOT_READY_URL_SEGMENT)
+  public ResponseEntity<User> notReady2Play(@PathVariable("uuid") UUID userUUID) {
+    return ResponseEntity.ok(gameService.stopPlaying(userUUID));
   }
 
-  @GetMapping("/{uuid}/match")
-  public MatchStatus play(@PathVariable("uuid") UUID userUUID) {
-    return gameService.findMatchByUserId(userUUID);
+  @GetMapping(WebPathConstants.USER_MATCH_URL_SEGMENT)
+  public ResponseEntity<MatchStatus> play(@PathVariable("uuid") UUID userUUID) {
+    return ResponseEntity.ok(gameService.findMatchByUserId(userUUID));
   }
 
   @GetMapping

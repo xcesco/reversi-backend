@@ -24,6 +24,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class GameServiceImpl implements GameService {
   @EventListener
   @Transactional
   public void onMatchStart(MatchStartEvent event) {
-    logger.info("onMatchStart {}", event.getMatchUUID());
+    logger.debug("onMatchStart {}", event.getMatchUUID());
 
     sendToUser(event.getPlayer1UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_1));
     sendToUser(event.getPlayer2UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_2));
@@ -99,7 +100,10 @@ public class GameServiceImpl implements GameService {
   @EventListener
   @Transactional
   public void onMatchEnd(MatchEndEvent event) {
-    logger.info("MatchEndEvent {}", event.getMatchUUID());
+    logger.debug("MatchEndEvent {}", event.getMatchUUID());
+
+    // remove message queue
+    this.matchMovesQueues.remove(event.getMatchUUID());
 
     MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
 
@@ -114,14 +118,15 @@ public class GameServiceImpl implements GameService {
       userRepository.save(player);
     }
 
-    matchStatusRepository.delete(matchStatus);
+    matchStatus.setFinishDateTime(LocalDateTime.now());
+    matchStatusRepository.save(matchStatus);
   }
 
   @EventListener
   @Transactional
   public void onPlayerMove(MatchMoveEvent event) {
     MatchMoveMessage move = event.getMove();
-    logger.info("On match {}, player {} moves {}", move.getMatchUUID(), move.getPlayerPiece(), move.getMove());
+    logger.debug("On match {}, player {} moves {}", move.getMatchUUID(), move.getPlayerPiece(), move.getMove());
     if (matchMovesQueues.containsKey(move.getMatchUUID())) {
       matchMovesQueues.get(move.getMatchUUID()).add(Pair.of(move.getPlayerPiece(), move.getMove()));
     } else {
@@ -132,10 +137,11 @@ public class GameServiceImpl implements GameService {
   @EventListener
   @Transactional
   public void onMatchStatusChanges(MatchStatusEvent event) {
-    logger.info("onMatchStatusChanges {}", event.getMatchStatus());
+    logger.debug("onMatchStatusChanges {}", event.getMatchStatus());
 
     // update snapshot
     GameSnapshot snapshot = event.getMatchStatus().getSnapshot();
+    assert event.getMatchStatus().getId() != null;
     MatchStatus matchStatus = matchStatusRepository
             .findById(event.getMatchStatus().getId())
             .orElse(event.getMatchStatus());
@@ -151,7 +157,7 @@ public class GameServiceImpl implements GameService {
     Map<String, Object> headers = new HashMap<>();
     headers.put(HEADER_TYPE, message.getClass().getSimpleName());
     String userTopic = TOPIC_PREFIX + "/user/" + userUUID;
-    logger.info("Send message to {}", userTopic);
+    logger.debug("Send message {} to {}", message.getClass().getSimpleName(), userTopic);
     messagingTemplate.convertAndSend(userTopic, message, headers);
   }
 
