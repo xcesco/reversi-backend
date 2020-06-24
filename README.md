@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/xcesco/reversi-backend.svg?branch=master)](https://travis-ci.org/xcesco/reversi-backend)
 [![Heroku App Status](http://heroku-shields.herokuapp.com/fmt-reversi)](https://fmt-reversi.herokuapp.com)
+[![GitHub issues](https://img.shields.io/github/issues/xcesco/reversi-backend.svg)](https://github.com/xcesco/reversi-backend/issues)
 
 # reversi-backend
 Backend server for reversi matchStatus
