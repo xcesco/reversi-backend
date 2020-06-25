@@ -10,8 +10,8 @@ import it.fmt.games.reversi.model.Coordinates;
 import org.abubusoft.reversi.server.repositories.support.CoordinateDeserializer;
 import org.abubusoft.reversi.server.repositories.support.CoordinateSerializer;
 
-public abstract class JSONMapperUtils {
-  private JSONMapperUtils() {
+public abstract class JSONMapperFactory {
+  private JSONMapperFactory() {
 
   }
 

@@ -3,17 +3,15 @@ package org.abubusoft.reversi.server.services;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.Piece;
+import org.abubusoft.reversi.messages.*;
 import org.abubusoft.reversi.server.events.MatchEndEvent;
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.server.events.MatchStartEvent;
 import org.abubusoft.reversi.server.events.MatchStatusEvent;
-import org.abubusoft.reversi.messages.MatchEnd;
-import org.abubusoft.reversi.messages.MatchMove;
-import org.abubusoft.reversi.messages.MatchStart;
-import org.abubusoft.reversi.messages.ConnectedUser;
 import org.abubusoft.reversi.server.model.*;
 import org.abubusoft.reversi.server.repositories.MatchStatusRepository;
 import org.abubusoft.reversi.server.repositories.UserRepository;
+import org.abubusoft.reversi.server.web.controllers.WebPathConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -35,7 +33,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.abubusoft.reversi.server.ReversiServerApplication.MATCH_EXECUTOR;
-import static org.abubusoft.reversi.server.WebSocketConfig.TOPIC_PREFIX;
 
 @Component
 public class GameServiceImpl implements GameService {
@@ -93,8 +90,8 @@ public class GameServiceImpl implements GameService {
   public void onMatchStart(MatchStartEvent event) {
     logger.debug("onMatchStart {}", event.getMatchUUID());
 
-    sendToUser(event.getPlayer1UUID(), new MatchStart(event.getMatchUUID(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchStart(event.getMatchUUID(), Piece.PLAYER_2));
+    sendToUser(event.getPlayer1UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_1));
+    sendToUser(event.getPlayer2UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_2));
   }
 
   @EventListener
@@ -107,8 +104,8 @@ public class GameServiceImpl implements GameService {
 
     MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
 
-    sendToUser(event.getPlayer1UUID(), new MatchEnd(matchStatus.getId(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchEnd(matchStatus.getId(), Piece.PLAYER_2));
+    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_1));
+    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_2));
 
     List<User> users = matchStatus.getUsers();
     for (User user:users) {
@@ -126,11 +123,11 @@ public class GameServiceImpl implements GameService {
   @Transactional
   public void onPlayerMove(MatchMoveEvent event) {
     MatchMove move = event.getMove();
-    logger.debug("On match {}, player {} moves {}", move.getMatchUUID(), move.getPlayerPiece(), move.getMove());
-    if (matchMovesQueues.containsKey(move.getMatchUUID())) {
-      matchMovesQueues.get(move.getMatchUUID()).add(Pair.of(move.getPlayerPiece(), move.getMove()));
+    logger.debug("On match {}, player {} moves {}", move.getMatchId(), move.getPlayerPiece(), move.getMove());
+    if (matchMovesQueues.containsKey(move.getMatchId())) {
+      matchMovesQueues.get(move.getMatchId()).add(Pair.of(move.getPlayerPiece(), move.getMove()));
     } else {
-      logger.warn("no match found with id={}", move.getMatchUUID());
+      logger.warn("no match found with id={}", move.getMatchId());
     }
   }
 
@@ -149,14 +146,15 @@ public class GameServiceImpl implements GameService {
     matchStatus = matchStatusRepository.save(matchStatus);
 
     //UUID currentPlayer = event.getMatchStatus().getSnapshot().getActivePiece()
-    sendToUser(event.getPlayer1().getUserId(), matchStatus.getSnapshot());
-    sendToUser(event.getPlayer2().getUserId(), matchStatus.getSnapshot());
+    MatchStatusMessage matchStatusMessage=new MatchStatusMessage(matchStatus.getId(), matchStatus.getSnapshot());
+    sendToUser(event.getPlayer1().getUserId(), matchStatusMessage);
+    sendToUser(event.getPlayer2().getUserId(), matchStatusMessage);
   }
 
-  private void sendToUser(UUID userUUID, Object message) {
+  private void sendToUser(UUID userUUID, MatchMessage message) {
     Map<String, Object> headers = new HashMap<>();
-    headers.put(HEADER_TYPE, message.getClass().getSimpleName());
-    String userTopic = TOPIC_PREFIX + "/user/" + userUUID;
+    headers.put(HEADER_TYPE, message.getMessageType());
+    String userTopic = WebPathConstants.WS_TOPIC_USER_MATCH_DESTINATION.replace("{uuid}", userUUID.toString());
     logger.debug("Send message {} to {}", message.getClass().getSimpleName(), userTopic);
     messagingTemplate.convertAndSend(userTopic, message, headers);
   }

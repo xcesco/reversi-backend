@@ -4,8 +4,7 @@ import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.GameStatus;
 import it.fmt.games.reversi.model.Piece;
-import org.abubusoft.reversi.messages.MatchEnd;
-import org.abubusoft.reversi.messages.MatchStart;
+import org.abubusoft.reversi.messages.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -41,33 +40,37 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
 
   @Override
   public Type getPayloadType(StompHeaders stompHeaders) {
-    switch (Objects.requireNonNull(stompHeaders.getFirst(HEADER_TYPE))) {
-      case "GameSnapshot":
-        return GameSnapshot.class;
-      case "MatchStartMessage":
-        return MatchStart.class;
-      case "MatchEndMessage":
-        return MatchEnd.class;
-    }
+    MatchMessageType messageType = MatchMessageType.valueOf(stompHeaders.getFirst(HEADER_TYPE));
 
-    return GameSnapshot.class;
+    switch (messageType) {
+      case MATCH_START:
+        return MatchStartMessage.class;
+      case MATCH_STATUS:
+        return MatchStatusMessage.class;
+      case MATCH_END:
+        return MatchEndMessage.class;
+      default:
+        return null;
+    }
   }
 
   @Override
   public void handleFrame(StompHeaders stompHeaders, Object o) {
     String destination = stompHeaders.getDestination();
 
-    switch (Objects.requireNonNull(stompHeaders.getFirst(HEADER_TYPE))) {
-      case "MatchStartMessage": {
-        MatchStart matchStart = (MatchStart) o;
+    MatchMessageType messageType = MatchMessageType.valueOf(stompHeaders.getFirst(HEADER_TYPE));
+
+    switch (messageType) {
+      case MATCH_START:
+        MatchStartMessage matchStart = (MatchStartMessage) o;
         if (userTopicUrl.equals(destination)) {
-          matchId = matchStart.getMatchUUID();
+          matchId = matchStart.getMatchId();
           assertNotNull(matchStart);
         }
-      }
+
       break;
-      case "GameSnapshot": {
-        GameSnapshot gameSnapshot = (GameSnapshot) o;
+      case MATCH_STATUS:
+        GameSnapshot gameSnapshot = ((MatchStatusMessage) o).getGameSnapshot();
         if (userTopicUrl.equals(destination) && gameSnapshot.getActivePiece() == userPiece && gameSnapshot.getAvailableMoves().getMovesActivePlayer().size() > 0) {
           logger.debug("user {} can moves: {}", gameSnapshot.getActivePiece(), gameSnapshot.getAvailableMoves().getMovesActivePlayer());
           assertNotNull(gameSnapshot);
@@ -82,14 +85,12 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
           );
           result = gameSnapshot.getStatus();
         }
-      }
       break;
-      case "MatchEndMessage": {
-        MatchEnd matchEnd = (MatchEnd) o;
+      case MATCH_END:
+        MatchEndMessage matchEnd = (MatchEndMessage) o;
         assertNotNull(matchEnd);
         logger.debug("player {} receives match end", userPiece);
         matchId =null;
-      }
       break;
     }
   }

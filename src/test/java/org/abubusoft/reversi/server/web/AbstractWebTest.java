@@ -3,7 +3,7 @@ package org.abubusoft.reversi.server.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.Piece;
-import org.abubusoft.reversi.server.JSONMapperUtils;
+import org.abubusoft.reversi.server.JSONMapperFactory;
 import org.abubusoft.reversi.server.WebSocketConfig;
 import org.abubusoft.reversi.server.exceptions.AppRuntimeException;
 import org.abubusoft.reversi.messages.MatchMove;
@@ -66,7 +66,7 @@ public abstract class AbstractWebTest implements StompSender {
   protected void connectOnWebsocket() throws InterruptedException, ExecutionException, TimeoutException {
     stompClient = new WebSocketStompClient(new SockJsClient(createTransportClient()));
     MappingJackson2MessageConverter mappingJackson2MessageConverter=new MappingJackson2MessageConverter();
-    mappingJackson2MessageConverter.setObjectMapper(JSONMapperUtils.createMapper());
+    mappingJackson2MessageConverter.setObjectMapper(JSONMapperFactory.createMapper());
     stompClient.setMessageConverter(mappingJackson2MessageConverter);
     stompSession = stompClient.connect(websocketBaseUrl, new StompSessionHandlerAdapter() {
       @Override

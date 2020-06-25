@@ -8,6 +8,8 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
+import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 @Component
 public class StompEventListener {
@@ -17,6 +19,19 @@ public class StompEventListener {
 
     this.messagingTemplate = messagingTemplate;
   }
+
+  @EventListener
+  public void onSessionSubscribeEvent(SessionSubscribeEvent event) {
+    // StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
+    logger.info("[SessionSubscribeEvent] ");
+  }
+
+  @EventListener
+  public void onSessionUnsubscribeEvent(SessionUnsubscribeEvent event) {
+    // StompHeaderAccessor sha = StompHeaderAccessor.wrap(event.getMessage());
+    logger.info("[SessionUnsubscribeEvent] ");
+  }
+
 
 //  @Override
 //  public void onApplicationEvent(SessionConnectEvent event) {

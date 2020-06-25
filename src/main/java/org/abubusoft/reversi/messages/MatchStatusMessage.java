@@ -1,0 +1,26 @@
+package org.abubusoft.reversi.messages;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import it.fmt.games.reversi.model.GameSnapshot;
+
+import java.util.UUID;
+
+public class MatchStatusMessage extends MatchMessage {
+  private final GameSnapshot gameSnapshot;
+
+  @JsonCreator
+  public MatchStatusMessage(@JsonProperty("matchId") UUID matchId, @JsonProperty("gameSnapshot") GameSnapshot gameSnapshot) {
+    super(matchId, MatchMessageType.MATCH_STATUS);
+    this.gameSnapshot = gameSnapshot;
+  }
+
+  public GameSnapshot getGameSnapshot() {
+    return gameSnapshot;
+  }
+
+  @Override
+  public void accept(MatchMessageVisitor visitor) {
+    visitor.visit(this);
+  }
+}

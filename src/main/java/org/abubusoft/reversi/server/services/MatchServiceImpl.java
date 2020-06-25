@@ -39,7 +39,6 @@ public class MatchServiceImpl implements MatchService, GameRenderer {
 
   @Value("${game.turn.timeout}")
   private int turnTimeout;
-  private Reversi reversi;
 
   @Autowired
   public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
@@ -74,7 +73,7 @@ public class MatchServiceImpl implements MatchService, GameRenderer {
   public void play() {
     UserInputReader inputReader = userInputReaderProvider.getObject(movesQueue, turnTimeout);
     GameLogic gameLogic = new GameLogicImpl(player1, player2, inputReader);
-    reversi = new Reversi(this, gameLogic);
+    Reversi reversi = new Reversi(this, gameLogic);
 
     applicationEventPublisher.publishEvent(new MatchStartEvent(getId(), player1.getUserId(), player2.getUserId()));
     try {

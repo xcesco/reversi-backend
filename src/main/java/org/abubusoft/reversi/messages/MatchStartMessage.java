@@ -4,24 +4,23 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.fmt.games.reversi.model.Piece;
 
-import java.io.Serializable;
 import java.util.UUID;
 
-public class MatchEnd implements Serializable {
-  private final UUID matchUUID;
+public class MatchStartMessage extends MatchMessage {
   private final Piece piece;
 
   @JsonCreator
-  public MatchEnd(@JsonProperty("matchUUID") UUID matchUUID, @JsonProperty("piece") Piece piece) {
-    this.matchUUID = matchUUID;
+  public MatchStartMessage(@JsonProperty("matchId") UUID matchId, @JsonProperty("piece") Piece piece) {
+    super(matchId, MatchMessageType.MATCH_START);
     this.piece = piece;
-  }
-
-  public UUID getMatchUUID() {
-    return matchUUID;
   }
 
   public Piece getPiece() {
     return piece;
+  }
+
+  @Override
+  public void accept(MatchMessageVisitor visitor) {
+    visitor.visit(this);
   }
 }

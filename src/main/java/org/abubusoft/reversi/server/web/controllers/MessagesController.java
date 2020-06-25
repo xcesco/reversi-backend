@@ -18,9 +18,10 @@ public class MessagesController {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  @MessageMapping(WebPathConstants.WS_USER_TOPIC)
+  @MessageMapping(WebPathConstants.USER_MOVES_URL_SEGMENT)
   public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMove move) {
-    if (userUUID.equals(move.getPlayerUUID().toString())) {
+    logger.debug("receive message from "+userUUID);
+    if (userUUID.equals(move.getPlayerId().toString())) {
       applicationEventPublisher.publishEvent(new MatchMoveEvent(move));
     } else {
       logger.warn("something is strange");

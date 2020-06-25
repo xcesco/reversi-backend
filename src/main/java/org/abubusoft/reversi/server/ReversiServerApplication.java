@@ -63,7 +63,7 @@ public class ReversiServerApplication {
 //    builder.serializationInclusion(JsonInclude.Include.NON_NULL);
 //    builder.serializationInclusion(JsonInclude);
 
-    return JSONMapperUtils.createMapper();
+    return JSONMapperFactory.createMapper();
   }
 
   @Bean(MATCH_EXECUTOR)
