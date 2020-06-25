@@ -23,10 +23,7 @@ import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -36,15 +33,14 @@ import static org.abubusoft.reversi.server.ReversiServerApplication.MATCH_EXECUT
 
 @Component
 public class GameServiceImpl implements GameService {
-  private final static Logger logger = LoggerFactory.getLogger(GameServiceImpl.class);
   public static final String HEADER_TYPE = "type";
-
+  private final static Logger logger = LoggerFactory.getLogger(GameServiceImpl.class);
   private final UserRepository userRepository;
   private final MatchStatusRepository matchStatusRepository;
   private final SimpMessageSendingOperations messagingTemplate;
   private final ObjectProvider<MatchService> gameInstanceProvider;
   private final Map<UUID, BlockingQueue<Pair<Piece, Coordinates>>> matchMovesQueues;
-
+  private final Executor matchExecutor;
 
   public GameServiceImpl(UserRepository userRepository,
                          MatchStatusRepository matchStatusRepository,
@@ -59,8 +55,6 @@ public class GameServiceImpl implements GameService {
     this.matchMovesQueues = new ConcurrentHashMap<>();
   }
 
-  private final Executor matchExecutor;
-
   @Transactional
   public void playMatch(NetworkPlayer1 player1, NetworkPlayer2 player2) {
     User user1 = userRepository.findById(player1.getUserId()).orElse(null);
@@ -69,6 +63,7 @@ public class GameServiceImpl implements GameService {
     if (user1 != null && user2 != null) {
       BlockingQueue<Pair<Piece, Coordinates>> moveQueue = new LinkedBlockingQueue<>();
       MatchService instance = gameInstanceProvider.getObject(player1, player2, moveQueue);
+      logger.debug("playMatch matchId: {}", instance.getId());
       matchMovesQueues.put(instance.getId(), moveQueue);
 
       user1.setStatus(UserStatus.IN_GAME);
@@ -76,8 +71,6 @@ public class GameServiceImpl implements GameService {
       userRepository.save(user1);
       userRepository.save(user2);
       MatchStatus matchStatus = matchStatusRepository.save(MatchStatus.of(instance.getId(), null));
-      matchStatus.getUsers().add(user1);
-      matchStatus.getUsers().add(user2);
       matchStatusRepository.save(matchStatus);
 
       matchExecutor.execute(instance::play);
@@ -88,28 +81,30 @@ public class GameServiceImpl implements GameService {
   @EventListener
   @Transactional
   public void onMatchStart(MatchStartEvent event) {
-    logger.debug("onMatchStart {}", event.getMatchUUID());
+    logger.debug("onMatchStart matchId: {}", event.getMatchUUID());
 
-    sendToUser(event.getPlayer1UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchStartMessage(event.getMatchUUID(), Piece.PLAYER_2));
+    MatchStartMessage startMessageForPlayer1=new MatchStartMessage(event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
+    MatchStartMessage startMessageForPlayer2=new MatchStartMessage(event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
+    sendToUser(event.getPlayer1UUID(), startMessageForPlayer1);
+    sendToUser(event.getPlayer2UUID(), startMessageForPlayer2);
   }
 
   @EventListener
   @Transactional
   public void onMatchEnd(MatchEndEvent event) {
-    logger.debug("MatchEndEvent {}", event.getMatchUUID());
+    logger.debug("onMatchEnd matchId: {}", event.getMatchUUID());
 
     // remove message queue
     this.matchMovesQueues.remove(event.getMatchUUID());
 
     MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
 
-    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_1));
-    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(matchStatus.getId(), Piece.PLAYER_2));
+    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(event.getPlayer1UUID(), matchStatus.getId()));
+    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getPlayer2UUID(), matchStatus.getId()));
 
-    List<User> users = matchStatus.getUsers();
-    for (User user:users) {
-      User player = userRepository.findById(user.getId()).orElse(null);
+    List<UUID> userIds = Arrays.asList(event.getPlayer1UUID(), event.getPlayer2UUID());
+    for (UUID userId:userIds) {
+      User player = userRepository.findById(userId).orElse(null);
       player.setStatus(UserStatus.NOT_READY_TO_PLAY);
       player.setMatchStatus(null);
       userRepository.save(player);
@@ -121,9 +116,9 @@ public class GameServiceImpl implements GameService {
 
   @EventListener
   @Transactional
-  public void onPlayerMove(MatchMoveEvent event) {
+  public void onMatchMove(MatchMoveEvent event) {
     MatchMove move = event.getMove();
-    logger.debug("On match {}, player {} moves {}", move.getMatchId(), move.getPlayerPiece(), move.getMove());
+    logger.debug("On match matchId: {}, player {} moves {}", move.getMatchId(), move.getPlayerPiece(), move.getMove());
     if (matchMovesQueues.containsKey(move.getMatchId())) {
       matchMovesQueues.get(move.getMatchId()).add(Pair.of(move.getPlayerPiece(), move.getMove()));
     } else {
@@ -134,7 +129,7 @@ public class GameServiceImpl implements GameService {
   @EventListener
   @Transactional
   public void onMatchStatusChanges(MatchStatusEvent event) {
-    logger.debug("onMatchStatusChanges {}", event.getMatchStatus());
+    logger.debug("onMatchStatusChanges matchId: {}", event.getMatchStatus().getId());
 
     // update snapshot
     GameSnapshot snapshot = event.getMatchStatus().getSnapshot();
@@ -145,10 +140,8 @@ public class GameServiceImpl implements GameService {
     matchStatus.setSnapshot(snapshot);
     matchStatus = matchStatusRepository.save(matchStatus);
 
-    //UUID currentPlayer = event.getMatchStatus().getSnapshot().getActivePiece()
-    MatchStatusMessage matchStatusMessage=new MatchStatusMessage(matchStatus.getId(), matchStatus.getSnapshot());
-    sendToUser(event.getPlayer1().getUserId(), matchStatusMessage);
-    sendToUser(event.getPlayer2().getUserId(), matchStatusMessage);
+    sendToUser(event.getPlayer1().getUserId(), new MatchStatusMessage(event.getPlayer1().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
+    sendToUser(event.getPlayer2().getUserId(), new MatchStatusMessage(event.getPlayer2().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
   }
 
   private void sendToUser(UUID userUUID, MatchMessage message) {

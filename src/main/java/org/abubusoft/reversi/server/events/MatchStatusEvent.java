@@ -4,6 +4,8 @@ import org.abubusoft.reversi.server.model.MatchStatus;
 import org.abubusoft.reversi.server.model.NetworkPlayer1;
 import org.abubusoft.reversi.server.model.NetworkPlayer2;
 
+import java.util.UUID;
+
 public class MatchStatusEvent extends AppEvent {
 
   private final NetworkPlayer1 player1;

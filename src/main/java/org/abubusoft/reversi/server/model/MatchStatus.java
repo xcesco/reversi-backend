@@ -24,10 +24,6 @@ public class MatchStatus extends AbstractBaseEntity {
   @JsonSerialize(using = ToStringSerializer.class)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
   private LocalDateTime finishDateTime;
-  @JsonIgnore
-  @JoinColumn(name = "match_id")
-  @OneToMany
-  private List<User> users = new ArrayList<>();
 
   public MatchStatus(UUID id) {
     super(id);
@@ -55,25 +51,16 @@ public class MatchStatus extends AbstractBaseEntity {
     if (!super.equals(o)) return false;
     MatchStatus that = (MatchStatus) o;
     return Objects.equals(snapshot, that.snapshot) &&
-            Objects.equals(finishDateTime, that.finishDateTime) &&
-            Objects.equals(users, that.users);
+            Objects.equals(finishDateTime, that.finishDateTime);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), snapshot, finishDateTime, users);
+    return Objects.hash(super.hashCode(), snapshot, finishDateTime);
   }
 
   public void setFinishDateTime(LocalDateTime finishDateTime) {
     this.finishDateTime = finishDateTime;
-  }
-
-  public List<User> getUsers() {
-    return users;
-  }
-
-  public void setUsers(List<User> users) {
-    this.users = users;
   }
 
   public GameSnapshot getSnapshot() {

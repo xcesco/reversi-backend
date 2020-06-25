@@ -10,17 +10,12 @@ public class MatchStatusMessage extends MatchMessage {
   private final GameSnapshot gameSnapshot;
 
   @JsonCreator
-  public MatchStatusMessage(@JsonProperty("matchId") UUID matchId, @JsonProperty("gameSnapshot") GameSnapshot gameSnapshot) {
-    super(matchId, MatchMessageType.MATCH_STATUS);
+  public MatchStatusMessage(@JsonProperty("playerId") UUID playerId, @JsonProperty("matchId") UUID matchId, @JsonProperty("gameSnapshot") GameSnapshot gameSnapshot) {
+    super(playerId, matchId, MatchMessageType.MATCH_STATUS);
     this.gameSnapshot = gameSnapshot;
   }
 
   public GameSnapshot getGameSnapshot() {
     return gameSnapshot;
-  }
-
-  @Override
-  public void accept(MatchMessageVisitor visitor) {
-    visitor.visit(this);
   }
 }

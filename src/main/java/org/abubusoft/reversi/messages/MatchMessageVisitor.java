@@ -2,9 +2,11 @@ package org.abubusoft.reversi.messages;
 
 
 public interface MatchMessageVisitor {
-  void visit(MatchStartMessage command);
+  void visit(MatchStartMessage message);
 
-  void visit(MatchStatusMessage command);
+  void visit(MatchStatusMessage message);
 
-  void visit(MatchEndMessage command);
+  void visit(MatchEndMessage message);
+
+  void visit(MatchMessage message);
 }

@@ -1,7 +1,17 @@
 package org.abubusoft.reversi.messages;
 
 public enum MatchMessageType {
-  MATCH_START,
-  MATCH_STATUS,
-  MATCH_END;
+  MATCH_START(MatchStartMessage.class),
+  MATCH_STATUS(MatchStatusMessage.class),
+  MATCH_END(MatchEndMessage.class);
+
+  public Class<? extends MatchMessage> getType() {
+    return type;
+  }
+
+  private final Class<? extends MatchMessage> type;
+
+  MatchMessageType(Class<? extends MatchMessage> type) {
+    this.type = type;
+  }
 }

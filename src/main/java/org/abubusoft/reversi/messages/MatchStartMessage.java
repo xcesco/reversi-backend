@@ -7,20 +7,15 @@ import it.fmt.games.reversi.model.Piece;
 import java.util.UUID;
 
 public class MatchStartMessage extends MatchMessage {
-  private final Piece piece;
+  private final Piece assignedPiece;
 
   @JsonCreator
-  public MatchStartMessage(@JsonProperty("matchId") UUID matchId, @JsonProperty("piece") Piece piece) {
-    super(matchId, MatchMessageType.MATCH_START);
-    this.piece = piece;
+  public MatchStartMessage(@JsonProperty("playerId") UUID playerId, @JsonProperty("matchId") UUID matchId, @JsonProperty("assignedPiece") Piece assignedPiece) {
+    super(playerId, matchId, MatchMessageType.MATCH_START);
+    this.assignedPiece = assignedPiece;
   }
 
-  public Piece getPiece() {
-    return piece;
-  }
-
-  @Override
-  public void accept(MatchMessageVisitor visitor) {
-    visitor.visit(this);
+  public Piece getAssignedPiece() {
+    return assignedPiece;
   }
 }

@@ -41,17 +41,7 @@ public class UserSubscriptionFrameHandler implements StompFrameHandler {
   @Override
   public Type getPayloadType(StompHeaders stompHeaders) {
     MatchMessageType messageType = MatchMessageType.valueOf(stompHeaders.getFirst(HEADER_TYPE));
-
-    switch (messageType) {
-      case MATCH_START:
-        return MatchStartMessage.class;
-      case MATCH_STATUS:
-        return MatchStatusMessage.class;
-      case MATCH_END:
-        return MatchEndMessage.class;
-      default:
-        return null;
-    }
+    return messageType.getType();
   }
 
   @Override
