@@ -1,5 +1,7 @@
 package org.abubusoft.reversi.server.model;
 
+import it.fmt.games.reversi.model.Piece;
+
 import javax.persistence.*;
 import java.util.Objects;
 
@@ -9,6 +11,18 @@ public class User extends AbstractBaseEntity {
 
   @Enumerated(EnumType.STRING)
   private UserStatus status;
+
+
+  public Piece getPiece() {
+    return piece;
+  }
+
+  public void setPiece(Piece piece) {
+    this.piece = piece;
+  }
+
+  private Piece piece;
+
   @ManyToOne(fetch = FetchType.LAZY)
   private MatchStatus matchStatus;
 

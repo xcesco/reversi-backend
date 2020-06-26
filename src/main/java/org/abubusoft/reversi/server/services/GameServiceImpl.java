@@ -1,5 +1,7 @@
 package org.abubusoft.reversi.server.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.Piece;
@@ -41,18 +43,21 @@ public class GameServiceImpl implements GameService {
   private final ObjectProvider<MatchService> gameInstanceProvider;
   private final Map<UUID, BlockingQueue<Pair<Piece, Coordinates>>> matchMovesQueues;
   private final Executor matchExecutor;
+  private final ObjectMapper objectMapper;
 
   public GameServiceImpl(UserRepository userRepository,
                          MatchStatusRepository matchStatusRepository,
                          @Qualifier(MATCH_EXECUTOR) Executor matchExecutor,
                          ObjectProvider<MatchService> gameInstanceProvider,
-                         SimpMessageSendingOperations messagingTemplate) {
+                         SimpMessageSendingOperations messagingTemplate,
+                         ObjectMapper objectMapper) {
     this.userRepository = userRepository;
     this.matchStatusRepository = matchStatusRepository;
     this.matchExecutor = matchExecutor;
     this.messagingTemplate = messagingTemplate;
     this.gameInstanceProvider = gameInstanceProvider;
     this.matchMovesQueues = new ConcurrentHashMap<>();
+    this.objectMapper = objectMapper;
   }
 
   @Transactional
@@ -66,12 +71,16 @@ public class GameServiceImpl implements GameService {
       logger.debug("playMatch matchId: {}", instance.getId());
       matchMovesQueues.put(instance.getId(), moveQueue);
 
+      MatchStatus matchStatus = matchStatusRepository.save(MatchStatus.of(instance.getId(), null));
+
       user1.setStatus(UserStatus.IN_GAME);
+      user1.setPiece(Piece.PLAYER_1);
+      user1.setMatchStatus(matchStatus);
       user2.setStatus(UserStatus.IN_GAME);
+      user2.setPiece(Piece.PLAYER_2);
+      user2.setMatchStatus(matchStatus);
       userRepository.save(user1);
       userRepository.save(user2);
-      MatchStatus matchStatus = matchStatusRepository.save(MatchStatus.of(instance.getId(), null));
-      matchStatusRepository.save(matchStatus);
 
       matchExecutor.execute(instance::play);
     }
@@ -83,8 +92,8 @@ public class GameServiceImpl implements GameService {
   public void onMatchStart(MatchStartEvent event) {
     logger.debug("onMatchStart matchId: {}", event.getMatchUUID());
 
-    MatchStartMessage startMessageForPlayer1=new MatchStartMessage(event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
-    MatchStartMessage startMessageForPlayer2=new MatchStartMessage(event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
+    MatchStartMessage startMessageForPlayer1 = new MatchStartMessage(event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
+    MatchStartMessage startMessageForPlayer2 = new MatchStartMessage(event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
     sendToUser(event.getPlayer1UUID(), startMessageForPlayer1);
     sendToUser(event.getPlayer2UUID(), startMessageForPlayer2);
   }
@@ -103,10 +112,11 @@ public class GameServiceImpl implements GameService {
     sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getPlayer2UUID(), matchStatus.getId()));
 
     List<UUID> userIds = Arrays.asList(event.getPlayer1UUID(), event.getPlayer2UUID());
-    for (UUID userId:userIds) {
+    for (UUID userId : userIds) {
       User player = userRepository.findById(userId).orElse(null);
       player.setStatus(UserStatus.NOT_READY_TO_PLAY);
       player.setMatchStatus(null);
+      player.setPiece(null);
       userRepository.save(player);
     }
 
@@ -140,15 +150,25 @@ public class GameServiceImpl implements GameService {
     matchStatus.setSnapshot(snapshot);
     matchStatus = matchStatusRepository.save(matchStatus);
 
-    sendToUser(event.getPlayer1().getUserId(), new MatchStatusMessage(event.getPlayer1().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
-    sendToUser(event.getPlayer2().getUserId(), new MatchStatusMessage(event.getPlayer2().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
+    Piece activePiece = event.getMatchStatus().getSnapshot().getActivePiece();
+    boolean firstMove = event.getMatchStatus().getSnapshot().getLastMove() == null;
+    if (firstMove || activePiece == Piece.PLAYER_1) {
+      sendToUser(event.getPlayer1().getUserId(), new MatchStatusMessage(event.getPlayer1().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
+    }
+    if (firstMove || activePiece == Piece.PLAYER_2) {
+      sendToUser(event.getPlayer2().getUserId(), new MatchStatusMessage(event.getPlayer2().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
+    }
   }
 
   private void sendToUser(UUID userUUID, MatchMessage message) {
     Map<String, Object> headers = new HashMap<>();
     headers.put(HEADER_TYPE, message.getMessageType());
     String userTopic = WebPathConstants.WS_TOPIC_USER_MATCH_DESTINATION.replace("{uuid}", userUUID.toString());
-    logger.debug("Send message {} to {}", message.getClass().getSimpleName(), userTopic);
+    try {
+      logger.debug("Send message {} to {}: {}", message.getClass().getSimpleName(), userTopic, objectMapper.writeValueAsString(message));
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
     messagingTemplate.convertAndSend(userTopic, message, headers);
   }
 
@@ -200,7 +220,7 @@ public class GameServiceImpl implements GameService {
       if (otherUser != null) {
         // already set
         //updateUserStatus(otherUser.getId(), UserStatus.AWAITNG_TO_START);
-
+        logger.info("Start match {} vs {}", user.getId(), otherUser.getId());
         playMatch(new NetworkPlayer1(user.getId()),
                 new NetworkPlayer2(otherUser.getId()));
       }

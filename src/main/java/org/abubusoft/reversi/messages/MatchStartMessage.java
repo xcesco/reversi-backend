@@ -3,7 +3,7 @@ package org.abubusoft.reversi.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.fmt.games.reversi.model.Piece;
-
+ 
 import java.util.UUID;
 
 public class MatchStartMessage extends MatchMessage {
