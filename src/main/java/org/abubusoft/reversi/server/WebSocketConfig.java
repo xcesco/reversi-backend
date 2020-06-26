@@ -26,6 +26,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
   public static final String TOPIC_PREFIX = "/topic";
 
   private static final Logger logger = LoggerFactory.getLogger(WebSocketConfig.class);
+  public static final String STATUS_PREFIX = "/status";
   private GameService gameService;
 
   @Autowired
@@ -35,7 +36,7 @@ public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfig
 
   @Override
   public void configureMessageBroker(MessageBrokerRegistry config) {
-    config.enableSimpleBroker(TOPIC_PREFIX);
+    config.enableSimpleBroker(TOPIC_PREFIX, STATUS_PREFIX);
     config.setApplicationDestinationPrefixes(APPLICATION_ENDPOINT);
   }
 
