@@ -108,8 +108,9 @@ public class GameServiceImpl implements GameService {
 
     MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
 
-    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(event.getPlayer1UUID(), matchStatus.getId()));
-    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getPlayer2UUID(), matchStatus.getId()));
+
+    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(event.getPlayer1UUID(), matchStatus.getId(), event.getStatus(), event.getScore()));
+    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getPlayer2UUID(), matchStatus.getId(), event.getStatus(), event.getScore()));
 
     List<UUID> userIds = Arrays.asList(event.getPlayer1UUID(), event.getPlayer2UUID());
     for (UUID userId : userIds) {

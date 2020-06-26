@@ -74,18 +74,18 @@ public class MatchServiceImpl implements MatchService, GameRenderer {
     UserInputReader inputReader = userInputReaderProvider.getObject(movesQueue, turnTimeout);
     GameLogic gameLogic = new GameLogicImpl(player1, player2, inputReader);
     Reversi reversi = new Reversi(this, gameLogic);
+    GameSnapshot finalSnapshot;
 
     applicationEventPublisher.publishEvent(new MatchStartEvent(getId(), player1.getUserId(), player2.getUserId()));
     try {
-      reversi.play();
+      finalSnapshot = reversi.play();
+      applicationEventPublisher.publishEvent(new MatchEndEvent(getId(), player1.getUserId(), player2.getUserId(), finalSnapshot));
     } catch (AppPlayerTimeoutException e) {
-      applicationEventPublisher.publishEvent(new MatchStatusEvent(player1, player2, buildMatchStatusForTimeout(e)));
-    } finally {
-      applicationEventPublisher.publishEvent(new MatchEndEvent(getId(), player1.getUserId(), player2.getUserId()));
+      applicationEventPublisher.publishEvent(new MatchEndEvent(getId(), player1.getUserId(), player2.getUserId(), buildGameSnapshotForTimeout(e)));
     }
   }
 
-  private MatchStatus buildMatchStatusForTimeout(AppPlayerTimeoutException e) {
+  private GameSnapshot buildGameSnapshotForTimeout(AppPlayerTimeoutException e) {
     GameStatus winner = e.getPlayer().getPiece() == Piece.PLAYER_1 ? GameStatus.PLAYER2_WIN : GameStatus.PLAYER1_WIN;
     Score score = new Score(winner == GameStatus.PLAYER1_WIN ? gameSnapshot.getScore().getPlayer1Score() : 0,
             winner == GameStatus.PLAYER2_WIN ? gameSnapshot.getScore().getPlayer2Score() : 0);
@@ -96,7 +96,7 @@ public class MatchServiceImpl implements MatchService, GameRenderer {
             gameSnapshot.getBoard(),
             winner);
 
-    return MatchStatus.of(getId(), timeoutGameSnapshot);
+    return timeoutGameSnapshot;
   }
 
   private boolean isValidMove(Player player, Coordinates coordinates) {
