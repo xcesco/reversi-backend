@@ -2,7 +2,7 @@ package org.abubusoft.reversi.server.web;
 
 import it.fmt.games.reversi.model.GameStatus;
 import it.fmt.games.reversi.model.Piece;
-import org.abubusoft.reversi.messages.ConnectedUser;
+import org.abubusoft.reversi.messages.UserRegistration;
 import org.abubusoft.reversi.server.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -28,8 +28,8 @@ public class MatchSimulationPlayer2IsOutTest extends AbstractWebTest {
 
   @Test
   public void testMatch() throws Exception {
-    ConnectedUser user1Registration = new ConnectedUser("user1");
-    ConnectedUser user2Registration = new ConnectedUser("user1");
+    UserRegistration user1Registration = new UserRegistration("user1");
+    UserRegistration user2Registration = new UserRegistration("user1");
 
     logger.debug("base url is {}",baseUrl);
     user1 = restTemplate.postForEntity(baseUrl + "api/v1/public/users", user1Registration, User.class).getBody();

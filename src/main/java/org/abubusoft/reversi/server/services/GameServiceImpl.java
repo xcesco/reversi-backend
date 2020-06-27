@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
@@ -61,13 +62,10 @@ public class GameServiceImpl implements GameService {
   }
 
   @Transactional
-  public void playMatch(NetworkPlayer1 player1, NetworkPlayer2 player2) {
-    User user1 = userRepository.findById(player1.getUserId()).orElse(null);
-    User user2 = userRepository.findById(player2.getUserId()).orElse(null);
-
+  public void playMatch(User user1, User user2) {
     if (user1 != null && user2 != null) {
       BlockingQueue<Pair<Piece, Coordinates>> moveQueue = new LinkedBlockingQueue<>();
-      MatchService instance = gameInstanceProvider.getObject(player1, player2, moveQueue);
+      MatchService instance = gameInstanceProvider.getObject(new NetworkPlayer1(user1.getId()), new NetworkPlayer2(user2.getId()), moveQueue);
       logger.debug("playMatch matchId: {}", instance.getId());
       matchMovesQueues.put(instance.getId(), moveQueue);
 
@@ -178,16 +176,22 @@ public class GameServiceImpl implements GameService {
   }
 
   @Override
-  public User saveUser(ConnectedUser connectedUser) {
+  public User saveUser(UserRegistration userRegistration) {
     User user = new User();
-    user.setName(connectedUser.getName());
+    user.setName(userRegistration.getName());
     user.setStatus(UserStatus.NOT_READY_TO_PLAY);
     return userRepository.save(user);
   }
 
   @Override
-  public Iterable<User> findAllUsers() {
-    return userRepository.findAll();
+  public List<User> findAllUsers() {
+    List<User> result = new ArrayList<>();
+
+    for (User user : userRepository.findAll()) {
+      result.add(user);
+    }
+
+    return result;
   }
 
   private User updateUserStatus(UUID userUUID, UserStatus updatedStatus) {
@@ -210,28 +214,31 @@ public class GameServiceImpl implements GameService {
   @Transactional
   public User readyToPlay(UUID userUUID) {
     User user = userRepository.findById(userUUID).orElse(null);
-    User otherUser = userRepository.findByStatus(UserStatus.AWAITNG_TO_START).stream()
-            .filter(other -> !other.getId().equals(userUUID))
-            .findFirst().orElse(null);
-
-    if (user != null && user.getStatus() == UserStatus.NOT_READY_TO_PLAY) {
+    if (user != null) {
       updateUserStatus(userUUID, UserStatus.AWAITNG_TO_START);
-
-      if (otherUser != null) {
-        // already set
-        //updateUserStatus(otherUser.getId(), UserStatus.AWAITNG_TO_START);
-        logger.info("Start match {} vs {}", user.getId(), otherUser.getId());
-        playMatch(new NetworkPlayer1(user.getId()),
-                new NetworkPlayer2(otherUser.getId()));
-      }
     }
-
     return user;
   }
 
   @Override
   public User stopPlaying(UUID userUUID) {
     return updateUserStatus(userUUID, UserStatus.NOT_READY_TO_PLAY);
+  }
+
+  @Transactional
+  @Scheduled(fixedRate = 5000)
+  public void scheduleMatch() {
+    List<User> users = userRepository.findByStatus(UserStatus.AWAITNG_TO_START);
+
+    int n = users.size() / 2 * 2;
+
+    for (int i = 0; i < n; i += 2) {
+      User player1 = users.get(i);
+      User player2 = users.get(i + 1);
+      logger.info("Start match {} vs {}", player1.getId(), player2.getId());
+      playMatch(player1, player2);
+    }
+
   }
 
 

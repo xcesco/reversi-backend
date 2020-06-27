@@ -21,10 +21,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.util.Pair;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.BlockingQueue;
 
+@EnableScheduling
 @SpringBootApplication
 public class ReversiServerApplication {
   final static Logger logger = LoggerFactory.getLogger(ReversiServerApplication.class);

@@ -1,5 +1,6 @@
 package org.abubusoft.reversi.server.web.controllers;
 
+import org.abubusoft.reversi.messages.ConnectedUser;
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.messages.MatchMove;
 import org.abubusoft.reversi.server.model.User;
@@ -28,11 +29,11 @@ public class MessagesController {
 
   @MessageMapping(WebPathConstants.WS_USER_READY_URL_SEGMENT)
   @SendToUser("/status")
-  public User playerIsReady(@DestinationVariable("uuid") String userUUID) {
+  public ConnectedUser playerIsReady(@DestinationVariable("uuid") String userUUID) {
     logger.debug("/status receive message from "+userUUID);
     User user=gameService.readyToPlay(UUID.fromString(userUUID));
 
-    return user;
+    return new ConnectedUser(user.getId(), user.getName(), user.getStatus(), user.getPiece());
   }
 
   @MessageMapping(WebPathConstants.WS_USER_MOVES_URL_SEGMENT)
