@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.Piece;
+import it.fmt.games.reversi.model.cpu.RandomDecisionHandler;
 import org.abubusoft.reversi.messages.*;
 import org.abubusoft.reversi.server.events.MatchEndEvent;
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
@@ -63,26 +64,44 @@ public class GameServiceImpl implements GameService {
 
   @Transactional
   public void playMatch(User user1, User user2) {
-    if (user1 != null && user2 != null) {
-      BlockingQueue<Pair<Piece, Coordinates>> moveQueue = new LinkedBlockingQueue<>();
-      MatchService instance = gameInstanceProvider.getObject(new NetworkPlayer1(user1.getId()), new NetworkPlayer2(user2.getId()), moveQueue);
-      logger.debug("playMatch matchId: {}", instance.getId());
-      matchMovesQueues.put(instance.getId(), moveQueue);
+    NetworkPlayer1 player1;
+    NetworkPlayer2 player2;
+    if (user1 != null) {
+      player1 = new NetworkPlayer1(user1.getId());
+    } else {
+      player1 = new NetworkPlayer1(new RandomDecisionHandler());
+    }
 
-      MatchStatus matchStatus = matchStatusRepository.save(MatchStatus.of(instance.getId(), null));
+    if (user2 != null) {
+      player2 = new NetworkPlayer2(user2.getId());
+    } else {
+      player2 = new NetworkPlayer2(new RandomDecisionHandler());
+    }
 
+    BlockingQueue<Pair<Piece, Coordinates>> moveQueue = new LinkedBlockingQueue<>();
+    MatchService instance = gameInstanceProvider.getObject(player1, player2, moveQueue);
+    logger.debug("playMatch matchId: {}", instance.getId());
+    matchMovesQueues.put(instance.getId(), moveQueue);
+
+    MatchStatus matchStatus = matchStatusRepository.save(MatchStatus.of(instance.getId(), null));
+
+    if (user1 != null) {
       user1.setStatus(UserStatus.IN_GAME);
       user1.setPiece(Piece.PLAYER_1);
       user1.setMatchStatus(matchStatus);
+      user1.setWaitingTime(0);
+      userRepository.save(user1);
+    }
+
+    if (user2 != null) {
       user2.setStatus(UserStatus.IN_GAME);
       user2.setPiece(Piece.PLAYER_2);
       user2.setMatchStatus(matchStatus);
-      userRepository.save(user1);
+      user2.setWaitingTime(0);
       userRepository.save(user2);
-
-      matchExecutor.execute(instance::play);
     }
 
+    matchExecutor.execute(instance::play);
   }
 
   @EventListener
@@ -92,8 +111,13 @@ public class GameServiceImpl implements GameService {
 
     MatchStartMessage startMessageForPlayer1 = new MatchStartMessage(event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
     MatchStartMessage startMessageForPlayer2 = new MatchStartMessage(event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
-    sendToUser(event.getPlayer1UUID(), startMessageForPlayer1);
-    sendToUser(event.getPlayer2UUID(), startMessageForPlayer2);
+    if (event.getPlayer1UUID() != null) {
+      sendToUser(event.getPlayer1UUID(), startMessageForPlayer1);
+    }
+
+    if (event.getPlayer2UUID() != null) {
+      sendToUser(event.getPlayer2UUID(), startMessageForPlayer2);
+    }
   }
 
   @EventListener
@@ -106,11 +130,17 @@ public class GameServiceImpl implements GameService {
 
     MatchStatus matchStatus = matchStatusRepository.findById(event.getMatchUUID()).orElse(null);
 
-    sendToUser(event.getPlayer1UUID(), new MatchEndMessage(event.getPlayer1UUID(), matchStatus.getId(), event.getStatus(), event.getScore()));
-    sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getPlayer2UUID(), matchStatus.getId(), event.getStatus(), event.getScore()));
+    if (event.getPlayer1UUID() != null) {
+      sendToUser(event.getPlayer1UUID(), new MatchEndMessage(event.getPlayer1UUID(), matchStatus.getId(), event.getStatus(), event.getScore()));
+    }
+
+    if (event.getPlayer2UUID() != null) {
+      sendToUser(event.getPlayer2UUID(), new MatchEndMessage(event.getPlayer2UUID(), matchStatus.getId(), event.getStatus(), event.getScore()));
+    }
 
     List<UUID> userIds = Arrays.asList(event.getPlayer1UUID(), event.getPlayer2UUID());
     for (UUID userId : userIds) {
+      if (userId == null) continue;
       User player = userRepository.findById(userId).orElse(null);
       player.setStatus(UserStatus.NOT_READY_TO_PLAY);
       player.setMatchStatus(null);
@@ -150,11 +180,11 @@ public class GameServiceImpl implements GameService {
 
     Piece activePiece = event.getMatchStatus().getSnapshot().getActivePiece();
     boolean firstMove = event.getMatchStatus().getSnapshot().getLastMove() == null;
-    if (firstMove || activePiece == Piece.PLAYER_1) {
-      sendToUser(event.getPlayer1().getUserId(), new MatchStatusMessage(event.getPlayer1().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
+    if (event.getPlayer1Id() != null && (firstMove || activePiece == Piece.PLAYER_1)) {
+      sendToUser(event.getPlayer1Id(), new MatchStatusMessage(event.getPlayer1Id(), matchStatus.getId(), matchStatus.getSnapshot()));
     }
-    if (firstMove || activePiece == Piece.PLAYER_2) {
-      sendToUser(event.getPlayer2().getUserId(), new MatchStatusMessage(event.getPlayer2().getUserId(), matchStatus.getId(), matchStatus.getSnapshot()));
+    if (event.getPlayer2Id() != null && (firstMove || activePiece == Piece.PLAYER_2)) {
+      sendToUser(event.getPlayer2Id(), new MatchStatusMessage(event.getPlayer2Id(), matchStatus.getId(), matchStatus.getSnapshot()));
     }
   }
 
@@ -230,13 +260,26 @@ public class GameServiceImpl implements GameService {
   public void scheduleMatch() {
     List<User> users = userRepository.findByStatus(UserStatus.AWAITNG_TO_START);
 
-    int n = users.size() / 2 * 2;
+    int n = users.size() % 2 == 1 ? users.size() - 1 : users.size();
+    logger.info("found {} player waiting to start", users.size());
 
     for (int i = 0; i < n; i += 2) {
       User player1 = users.get(i);
       User player2 = users.get(i + 1);
       logger.info("Start match {} vs {}", player1.getId(), player2.getId());
       playMatch(player1, player2);
+    }
+
+    if (users.size() > n) {
+      User player1 = users.get(users.size() - 1);
+      if (player1.getWaitingTime() > 5_000) {
+        logger.info("Start match {} vs CPU", player1.getId());
+        playMatch(player1, null);
+      } else {
+        player1.setWaitingTime(player1.getWaitingTime() + 5_000);
+        userRepository.save(player1);
+      }
+
     }
 
   }

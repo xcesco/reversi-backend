@@ -16,6 +16,7 @@ public class WebPathConstants {
    */
   public static final String WS_USER_MOVES_URL_SEGMENT = "/users/{uuid}/moves";
   public static final String WS_USER_READY_URL_SEGMENT = "/users/{uuid}/ready";
+  public static final String WS_USER_NOT_READY_URL_SEGMENT = "/users/{uuid}/not-ready";
 
   public static final String USER_READY_URL_SEGMENT = "/{uuid}/ready";
   public static final String USER_NOT_READY_URL_SEGMENT = "/{uuid}/not-ready";

@@ -1,8 +1,8 @@
 package org.abubusoft.reversi.server.web.controllers;
 
 import org.abubusoft.reversi.messages.ConnectedUser;
-import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.messages.MatchMove;
+import org.abubusoft.reversi.server.events.MatchMoveEvent;
 import org.abubusoft.reversi.server.model.User;
 import org.abubusoft.reversi.server.services.GameService;
 import org.slf4j.Logger;
@@ -11,34 +11,50 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.util.UUID;
 
 @Controller
 public class MessagesController {
   private final GameService gameService;
   private ApplicationEventPublisher applicationEventPublisher;
+  private SimpMessageSendingOperations messagingTemplate;
   private static final Logger logger = LoggerFactory.getLogger(MessagesController.class);
 
-  public MessagesController(@Autowired ApplicationEventPublisher applicationEventPublisher, @Autowired GameService gameService) {
+  public MessagesController(@Autowired ApplicationEventPublisher applicationEventPublisher, @Autowired GameService gameService,
+                            @Autowired SimpMessageSendingOperations messagingTemplate) {
     this.applicationEventPublisher = applicationEventPublisher;
-    this.gameService=gameService;
+    this.gameService = gameService;
+    this.messagingTemplate = messagingTemplate;
   }
 
   @MessageMapping(WebPathConstants.WS_USER_READY_URL_SEGMENT)
   @SendToUser("/status")
-  public ConnectedUser playerIsReady(@DestinationVariable("uuid") String userUUID) {
-    logger.debug("/status receive message from "+userUUID);
-    User user=gameService.readyToPlay(UUID.fromString(userUUID));
+  public ConnectedUser playerIsReady(@DestinationVariable("uuid") String userUUID, Principal principal) {
+    logger.debug("/status receive message from " + userUUID);
+    User user = gameService.readyToPlay(UUID.fromString(userUUID));
+
+    ConnectedUser connectedUser = new ConnectedUser(user.getId(), user.getName(), user.getStatus(), user.getPiece());
+    //messagingTemplate.convertAndSendToUser("/status", connectedUser);
+    return connectedUser;
+  }
+
+  @MessageMapping(WebPathConstants.WS_USER_NOT_READY_URL_SEGMENT)
+  @SendToUser("/status")
+  public ConnectedUser playerIsNotReady(@DestinationVariable("uuid") String userUUID, Principal principal) {
+    logger.debug("/status receive message from " + userUUID);
+    User user = gameService.stopPlaying(UUID.fromString(userUUID));
 
     return new ConnectedUser(user.getId(), user.getName(), user.getStatus(), user.getPiece());
   }
 
   @MessageMapping(WebPathConstants.WS_USER_MOVES_URL_SEGMENT)
   public void matchMove(@DestinationVariable("uuid") String userUUID, MatchMove move) {
-    logger.debug("receive message from "+userUUID);
+    logger.debug("receive message from " + userUUID);
     if (userUUID.equals(move.getPlayerId().toString())) {
       applicationEventPublisher.publishEvent(new MatchMoveEvent(move));
     } else {

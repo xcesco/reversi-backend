@@ -9,6 +9,16 @@ import java.util.Objects;
 public class User extends AbstractBaseEntity {
   private String name;
 
+  public long getWaitingTime() {
+    return waitingTime;
+  }
+
+  public void setWaitingTime(long waitingTime) {
+    this.waitingTime = waitingTime;
+  }
+
+  private long waitingTime;
+
   @Enumerated(EnumType.STRING)
   private UserStatus status;
 

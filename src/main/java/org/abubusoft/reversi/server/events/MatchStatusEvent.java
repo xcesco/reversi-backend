@@ -8,23 +8,23 @@ import java.util.UUID;
 
 public class MatchStatusEvent extends AppEvent {
 
-  private final NetworkPlayer1 player1;
-  private final NetworkPlayer2 player2;
+  private final UUID player1Id;
+  private final UUID player2Id;
   private final MatchStatus status;
 
-  public MatchStatusEvent(NetworkPlayer1 player1, NetworkPlayer2 player2, MatchStatus status) {
+  public MatchStatusEvent(UUID player1Id, UUID player2Id, MatchStatus status) {
     super(status.getId());
-    this.player1 = player1;
-    this.player2 = player2;
+    this.player1Id = player1Id;
+    this.player2Id = player2Id;
     this.status = status;
   }
 
-  public NetworkPlayer1 getPlayer1() {
-    return player1;
+  public UUID getPlayer1Id() {
+    return player1Id;
   }
 
-  public NetworkPlayer2 getPlayer2() {
-    return player2;
+  public UUID getPlayer2Id() {
+    return player2Id;
   }
 
   public MatchStatus getMatchStatus() {
