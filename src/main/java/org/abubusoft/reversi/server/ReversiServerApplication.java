@@ -38,17 +38,6 @@ public class ReversiServerApplication {
     SpringApplication.run(ReversiServerApplication.class, args);
   }
 
-//  @Bean
-//  CommandLineRunner init(GameRepository gameRepository) {
-//    return args -> {
-//      Stream.of("John", "Julie", "Jennifer", "Helen", "Rachel").forEach(name -> {
-//        GameStatus user = GameStatus.of(name, name + "@domain.com");
-//        gameRepository.save(user);
-//      });
-//      gameRepository.findAll().forEach(System.out::println);
-//    };
-//  }
-
   @Bean
   public OpenAPI customOpenAPI(@Value("${springdoc.version}") String appVersion) {
     return new OpenAPI().info(new Info().title("Foobar API")
