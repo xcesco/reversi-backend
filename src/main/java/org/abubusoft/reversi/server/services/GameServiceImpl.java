@@ -109,8 +109,8 @@ public class GameServiceImpl implements GameService {
   public void onMatchStart(MatchStartEvent event) {
     logger.debug("onMatchStart matchId: {}", event.getMatchUUID());
 
-    MatchStartMessage startMessageForPlayer1 = new MatchStartMessage(event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
-    MatchStartMessage startMessageForPlayer2 = new MatchStartMessage(event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
+    MatchStartMessage startMessageForPlayer1 = new MatchStartMessage(PlayerType.HUMAN_PLAYER, PlayerType.NETWORK_PLAYER, event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
+    MatchStartMessage startMessageForPlayer2 = new MatchStartMessage(PlayerType.NETWORK_PLAYER, PlayerType.HUMAN_PLAYER, event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
     if (event.getPlayer1UUID() != null) {
       sendToUser(event.getPlayer1UUID(), startMessageForPlayer1);
     }
