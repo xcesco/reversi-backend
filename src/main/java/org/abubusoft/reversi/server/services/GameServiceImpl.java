@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.fmt.games.reversi.model.Coordinates;
 import it.fmt.games.reversi.model.GameSnapshot;
 import it.fmt.games.reversi.model.Piece;
-import it.fmt.games.reversi.model.cpu.RandomDecisionHandler;
 import org.abubusoft.reversi.messages.*;
 import org.abubusoft.reversi.server.events.MatchEndEvent;
 import org.abubusoft.reversi.server.events.MatchMoveEvent;
@@ -19,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.util.Pair;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -62,6 +62,9 @@ public class GameServiceImpl implements GameService {
     this.objectMapper = objectMapper;
   }
 
+  @Value("${game.cpu.time}")
+  int cpuTime;
+
   @Transactional
   public void playMatch(User user1, User user2) {
     NetworkPlayer1 player1;
@@ -69,13 +72,13 @@ public class GameServiceImpl implements GameService {
     if (user1 != null) {
       player1 = new NetworkPlayer1(user1.getId());
     } else {
-      player1 = new NetworkPlayer1(new RandomDecisionHandler());
+      player1 = new NetworkPlayer1(new ServerRandomDecisionHandler(cpuTime));
     }
 
     if (user2 != null) {
       player2 = new NetworkPlayer2(user2.getId());
     } else {
-      player2 = new NetworkPlayer2(new RandomDecisionHandler());
+      player2 = new NetworkPlayer2(new ServerRandomDecisionHandler(cpuTime));
     }
 
     BlockingQueue<Pair<Piece, Coordinates>> moveQueue = new LinkedBlockingQueue<>();
@@ -154,7 +157,7 @@ public class GameServiceImpl implements GameService {
 
   @EventListener
   @Transactional
-  public void onMatchMove(MatchMoveEvent event) {
+  public void onReceivedUserMove(MatchMoveEvent event) {
     MatchMove move = event.getMove();
     logger.debug("On match matchId: {}, player {} moves {}", move.getMatchId(), move.getPlayerPiece(), move.getMove());
     if (matchMovesQueues.containsKey(move.getMatchId())) {
@@ -180,10 +183,13 @@ public class GameServiceImpl implements GameService {
 
     Piece activePiece = event.getMatchStatus().getSnapshot().getActivePiece();
     boolean firstMove = event.getMatchStatus().getSnapshot().getLastMove() == null;
-    if (event.getPlayer1Id() != null && (firstMove || activePiece == Piece.PLAYER_1)) {
+
+//    sendToUser(event.getPlayer1Id(), new MatchStatusMessage(event.getPlayer1Id(), matchStatus.getId(), matchStatus.getSnapshot()));
+    //  sendToUser(event.getPlayer2Id(), new MatchStatusMessage(event.getPlayer2Id(), matchStatus.getId(), matchStatus.getSnapshot()));
+    if (event.getPlayer1Id() != null /*&& (firstMove || activePiece == Piece.PLAYER_1)*/) {
       sendToUser(event.getPlayer1Id(), new MatchStatusMessage(event.getPlayer1Id(), matchStatus.getId(), matchStatus.getSnapshot()));
     }
-    if (event.getPlayer2Id() != null && (firstMove || activePiece == Piece.PLAYER_2)) {
+    if (event.getPlayer2Id() != null /*&& (firstMove || activePiece == Piece.PLAYER_2)*/) {
       sendToUser(event.getPlayer2Id(), new MatchStatusMessage(event.getPlayer2Id(), matchStatus.getId(), matchStatus.getSnapshot()));
     }
   }
