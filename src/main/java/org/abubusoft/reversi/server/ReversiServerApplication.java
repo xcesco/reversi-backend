@@ -64,10 +64,7 @@ public class ReversiServerApplication {
     logger.debug("{} max size is {} (available processors to this JVM)", MATCH_EXECUTOR, numberOfProcessors);
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(numberOfProcessors);
-    // tutti eseguiti
     executor.setQueueCapacity(0);
-    //executor.setMaxPoolSize(numberOfProcessors);
-    // unlimited of execution in queue
     executor.setThreadNamePrefix(COMPUTE_THREAD_PREFIX);
     executor.initialize();
     return executor;
