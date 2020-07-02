@@ -1,0 +1,6 @@
+{
+  "/swagger-ui-custom.html": {
+    "target": "http://localhost:8080",
+    "secure": true
+  }
+}
