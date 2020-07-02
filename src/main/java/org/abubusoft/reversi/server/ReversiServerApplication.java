@@ -12,8 +12,6 @@ import org.abubusoft.reversi.server.model.NetworkPlayer2;
 import org.abubusoft.reversi.server.services.MatchService;
 import org.abubusoft.reversi.server.services.MatchServiceImpl;
 import org.abubusoft.reversi.server.services.NetworkUserInputReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.SpringApplication;
@@ -29,7 +27,6 @@ import java.util.concurrent.BlockingQueue;
 @EnableScheduling
 @SpringBootApplication
 public class ReversiServerApplication {
-  final static Logger logger = LoggerFactory.getLogger(ReversiServerApplication.class);
 
   public static final String MATCH_EXECUTOR = "gameExecutor";
   private static final String COMPUTE_THREAD_PREFIX = "queue-";
@@ -42,7 +39,7 @@ public class ReversiServerApplication {
   public OpenAPI customOpenAPI(@Value("${springdoc.version}") String appVersion) {
     return new OpenAPI().info(new Info().title("Foobar API")
             .version(appVersion)
-            .description("This is a sample Foobar server created using springdocs - a library for OpenAPI 3 with spring boot.")
+            .description("This is FMT server created using springdocs - a library for OpenAPI 3 with spring boot.")
             .termsOfService("http://swagger.io/terms/")
             .license(new License().name("Apache 2.0")
                     .url("http://springdoc.org")));
@@ -50,10 +47,6 @@ public class ReversiServerApplication {
 
   @Bean
   public ObjectMapper objectMapper() {
-//    Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
-//    builder.serializationInclusion(JsonInclude.Include.NON_NULL);
-//    builder.serializationInclusion(JsonInclude);
-
     return JSONMapperFactory.createMapper();
   }
 
@@ -61,7 +54,6 @@ public class ReversiServerApplication {
   public ThreadPoolTaskExecutor matchExecutor() {
     Runtime runtime = Runtime.getRuntime();
     int numberOfProcessors = runtime.availableProcessors();
-    logger.debug("{} max size is {} (available processors to this JVM)", MATCH_EXECUTOR, numberOfProcessors);
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(numberOfProcessors);
     executor.setQueueCapacity(0);
