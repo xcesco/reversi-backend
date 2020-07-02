@@ -37,9 +37,9 @@ public class ReversiServerApplication {
 
   @Bean
   public OpenAPI customOpenAPI(@Value("${springdoc.version}") String appVersion) {
-    return new OpenAPI().info(new Info().title("Foobar API")
+    return new OpenAPI().info(new Info().title("Reversi FMT API")
             .version(appVersion)
-            .description("This is FMT server created using springdocs - a library for OpenAPI 3 with spring boot.")
+            .description("This page is created using springdocs - a library for OpenAPI 3 with spring boot.")
             .termsOfService("http://swagger.io/terms/")
             .license(new License().name("Apache 2.0")
                     .url("http://springdoc.org")));
