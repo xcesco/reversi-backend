@@ -8,8 +8,8 @@ public class MatchStartEvent extends AbstractMatchEvent {
 
   public MatchStartEvent(UUID matchUUID, UUID player1UUID, String player1Name, UUID player2UUID, String player2Name) {
     super(matchUUID, player1UUID, player2UUID);
-    this.player1Name=player1Name;
-    this.player2Name=player2Name;
+    this.player1Name = player1Name;
+    this.player2Name = player2Name;
   }
 
   public String getPlayer1Name() {
@@ -19,5 +19,4 @@ public class MatchStartEvent extends AbstractMatchEvent {
   public String getPlayer2Name() {
     return player2Name;
   }
-
 }

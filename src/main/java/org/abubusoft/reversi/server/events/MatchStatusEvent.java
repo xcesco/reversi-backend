@@ -7,7 +7,6 @@ import org.abubusoft.reversi.server.model.NetworkPlayer2;
 import java.util.UUID;
 
 public class MatchStatusEvent extends AppEvent {
-
   private final UUID player1Id;
   private final UUID player2Id;
   private final MatchStatus status;

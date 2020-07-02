@@ -8,7 +8,6 @@ import it.fmt.games.reversi.model.Score;
 import java.util.UUID;
 
 public class MatchEndMessage extends MatchMessage {
-
   private final GameStatus status;
   private final Score score;
 

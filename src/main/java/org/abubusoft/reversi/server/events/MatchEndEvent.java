@@ -7,7 +7,6 @@ import it.fmt.games.reversi.model.Score;
 import java.util.UUID;
 
 public class MatchEndEvent extends AbstractMatchEvent {
-
   private final GameStatus status;
   private final Score score;
 

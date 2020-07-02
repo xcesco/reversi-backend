@@ -8,7 +8,6 @@ import it.fmt.games.reversi.model.Piece;
 import java.util.UUID;
 
 public class MatchMove {
-
   private final UUID playerId;
   private final Piece playerPiece;
   private final Coordinates move;

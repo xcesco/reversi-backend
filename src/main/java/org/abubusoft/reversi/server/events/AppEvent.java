@@ -6,5 +6,4 @@ public abstract class AppEvent extends ApplicationEvent {
   public AppEvent(Object source) {
     super(source);
   }
-
 }
