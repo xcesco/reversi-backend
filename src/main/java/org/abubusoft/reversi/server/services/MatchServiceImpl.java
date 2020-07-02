@@ -62,7 +62,7 @@ public class MatchServiceImpl implements MatchService, GameRenderer {
     Reversi reversi = new Reversi(this, gameLogic);
     GameSnapshot finalSnapshot;
 
-    applicationEventPublisher.publishEvent(new MatchStartEvent(getId(), player1.getUserId(), player2.getUserId()));
+    applicationEventPublisher.publishEvent(new MatchStartEvent(getId(), player1.getUserId(), player1.getName(), player2.getUserId(), player2.getName()));
     try {
       finalSnapshot = reversi.play();
       applicationEventPublisher.publishEvent(new MatchEndEvent(getId(), player1.getUserId(), player2.getUserId(), finalSnapshot));

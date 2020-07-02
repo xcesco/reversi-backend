@@ -39,6 +39,7 @@ import static org.abubusoft.reversi.server.ReversiServerApplication.MATCH_EXECUT
 public class GameServiceImpl implements GameService {
   public static final String HEADER_TYPE = "type";
   private final static Logger logger = LoggerFactory.getLogger(GameServiceImpl.class);
+  public static final String BOT_NAME = "BOT";
   private final UserRepository userRepository;
   private final MatchStatusRepository matchStatusRepository;
   private final SimpMessageSendingOperations messagingTemplate;
@@ -70,15 +71,15 @@ public class GameServiceImpl implements GameService {
     NetworkPlayer1 player1;
     NetworkPlayer2 player2;
     if (user1 != null) {
-      player1 = new NetworkPlayer1(user1.getId());
+      player1 = new NetworkPlayer1(user1.getId(), user1.getName());
     } else {
-      player1 = new NetworkPlayer1(new ServerRandomDecisionHandler(cpuTime));
+      player1 = new NetworkPlayer1(new ServerRandomDecisionHandler(cpuTime), BOT_NAME);
     }
 
     if (user2 != null) {
-      player2 = new NetworkPlayer2(user2.getId());
+      player2 = new NetworkPlayer2(user2.getId(), user2.getName());
     } else {
-      player2 = new NetworkPlayer2(new ServerRandomDecisionHandler(cpuTime));
+      player2 = new NetworkPlayer2(new ServerRandomDecisionHandler(cpuTime), BOT_NAME);
     }
 
     BlockingQueue<Pair<Piece, Coordinates>> moveQueue = new LinkedBlockingQueue<>();
@@ -112,8 +113,8 @@ public class GameServiceImpl implements GameService {
   public void onMatchStart(MatchStartEvent event) {
     logger.debug("onMatchStart matchId: {}", event.getMatchUUID());
 
-    MatchStartMessage startMessageForPlayer1 = new MatchStartMessage(PlayerType.HUMAN_PLAYER, PlayerType.NETWORK_PLAYER, event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
-    MatchStartMessage startMessageForPlayer2 = new MatchStartMessage(PlayerType.NETWORK_PLAYER, PlayerType.HUMAN_PLAYER, event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
+    MatchStartMessage startMessageForPlayer1 = new MatchStartMessage(PlayerType.HUMAN_PLAYER, event.getPlayer1Name(), PlayerType.NETWORK_PLAYER, event.getPlayer2Name(), event.getPlayer1UUID(), event.getMatchUUID(), Piece.PLAYER_1);
+    MatchStartMessage startMessageForPlayer2 = new MatchStartMessage(PlayerType.NETWORK_PLAYER, event.getPlayer1Name(), PlayerType.HUMAN_PLAYER, event.getPlayer2Name(), event.getPlayer2UUID(), event.getMatchUUID(), Piece.PLAYER_2);
     if (event.getPlayer1UUID() != null) {
       sendToUser(event.getPlayer1UUID(), startMessageForPlayer1);
     }
@@ -277,13 +278,13 @@ public class GameServiceImpl implements GameService {
     }
 
     if (users.size() > n) {
-      User player1 = users.get(users.size() - 1);
-      if (player1.getWaitingTime() > 5_000) {
-        logger.info("Start match {} vs CPU", player1.getId());
-        playMatch(player1, null);
+      User player = users.get(users.size() - 1);
+      if (player.getWaitingTime() > 5_000) {
+        logger.info("Start match {} vs CPU", player.getId());
+        playMatch(null, player);
       } else {
-        player1.setWaitingTime(player1.getWaitingTime() + 5_000);
-        userRepository.save(player1);
+        player.setWaitingTime(player.getWaitingTime() + 5_000);
+        userRepository.save(player);
       }
 
     }

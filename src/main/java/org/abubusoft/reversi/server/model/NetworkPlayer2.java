@@ -2,20 +2,26 @@ package org.abubusoft.reversi.server.model;
 
 import it.fmt.games.reversi.DecisionHandler;
 import it.fmt.games.reversi.Player2;
-import it.fmt.games.reversi.model.Piece;
-import it.fmt.games.reversi.model.Player;
 
 import java.util.UUID;
 
 public class NetworkPlayer2 extends Player2 implements PlayerWithId {
   private final UUID userId;
 
-  public NetworkPlayer2(UUID userId) {
-    this.userId=userId;
+  public String getName() {
+    return name;
   }
 
-  public NetworkPlayer2(DecisionHandler decisionHandler) {
+  private final String name;
+
+  public NetworkPlayer2(UUID userId, String name) {
+    this.userId=userId;
+    this.name = name;
+  }
+
+  public NetworkPlayer2(DecisionHandler decisionHandler, String name) {
     super(decisionHandler);
+    this.name = name;
     userId = null;
   }
 

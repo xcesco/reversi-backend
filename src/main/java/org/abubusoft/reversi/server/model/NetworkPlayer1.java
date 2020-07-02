@@ -8,12 +8,20 @@ import java.util.UUID;
 public class NetworkPlayer1 extends Player1 implements PlayerWithId {
   private final UUID userId;
 
-  public NetworkPlayer1(UUID userId) {
-    this.userId = userId;
+  public String getName() {
+    return name;
   }
 
-  public NetworkPlayer1(DecisionHandler decisionHandler) {
+  private final String name;
+
+  public NetworkPlayer1(UUID userId, String name) {
+    this.userId = userId;
+    this.name = name;
+  }
+
+  public NetworkPlayer1(DecisionHandler decisionHandler, String name) {
     super(decisionHandler);
+    this.name = name;
     userId = null;
   }
 
