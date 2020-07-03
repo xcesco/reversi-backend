@@ -40,6 +40,7 @@ public class GameServiceImpl implements GameService {
   public static final String HEADER_TYPE = "type";
   private final static Logger logger = LoggerFactory.getLogger(GameServiceImpl.class);
   public static final String BOT_NAME = "BOT";
+  public static final int CHECK_INTERVAL = 5_000;
   private final UserRepository userRepository;
   private final MatchStatusRepository matchStatusRepository;
   private final SimpMessageSendingOperations messagingTemplate;
@@ -263,7 +264,7 @@ public class GameServiceImpl implements GameService {
   }
 
   @Transactional
-  @Scheduled(fixedRate = 5000)
+  @Scheduled(fixedRate = CHECK_INTERVAL)
   public void scheduleMatch() {
     List<User> users = userRepository.findByStatus(UserStatus.AWAITNG_TO_START);
 
@@ -278,12 +279,14 @@ public class GameServiceImpl implements GameService {
     }
 
     if (users.size() > n) {
+      // randomize player position
+      long rndPos = System.currentTimeMillis() % 2;
       User player = users.get(users.size() - 1);
-      if (player.getWaitingTime() > 5_000) {
+      if (player.getWaitingTime() > CHECK_INTERVAL) {
         logger.info("Start match {} vs CPU", player.getId());
-        playMatch(null, player);
+        playMatch(rndPos == 0 ? player : null, rndPos == 1 ? player : null);
       } else {
-        player.setWaitingTime(player.getWaitingTime() + 5_000);
+        player.setWaitingTime(player.getWaitingTime() + CHECK_INTERVAL);
         userRepository.save(player);
       }
 
