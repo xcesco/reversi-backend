@@ -30,6 +30,11 @@ public class UsersController {
     return ResponseEntity.ok(connectedUser);
   }
 
+  @DeleteMapping
+  public void deleteAll() {
+    gameService.deleteAllUser();
+  }
+
   @PatchMapping(WebPathConstants.USER_READY_URL_SEGMENT)
   public ResponseEntity<ConnectedUser> ready2Play(@PathVariable("uuid") UUID userUUID) {
     User user = gameService.readyToPlay(userUUID);

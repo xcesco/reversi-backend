@@ -19,4 +19,6 @@ public interface GameService {
   User readyToPlay(UUID userUUID);
 
   User stopPlaying(UUID userUUID);
+
+  void deleteAllUser();
 }

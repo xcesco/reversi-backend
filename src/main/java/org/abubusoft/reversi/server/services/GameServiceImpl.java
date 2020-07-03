@@ -263,6 +263,12 @@ public class GameServiceImpl implements GameService {
     return updateUserStatus(userUUID, UserStatus.NOT_READY_TO_PLAY);
   }
 
+  @Override
+  public void deleteAllUser() {
+    userRepository.deleteAll();
+    matchStatusRepository.deleteAll();
+  }
+
   @Transactional
   @Scheduled(fixedRate = CHECK_INTERVAL)
   public void scheduleMatch() {
