@@ -183,20 +183,19 @@ public class GameServiceImpl implements GameService {
     matchStatus.setSnapshot(snapshot);
     matchStatus = matchStatusRepository.save(matchStatus);
 
-    Piece activePiece = event.getMatchStatus().getSnapshot().getActivePiece();
-    boolean firstMove = event.getMatchStatus().getSnapshot().getLastMove() == null;
-
-//    sendToUser(event.getPlayer1Id(), new MatchStatusMessage(event.getPlayer1Id(), matchStatus.getId(), matchStatus.getSnapshot()));
-    //  sendToUser(event.getPlayer2Id(), new MatchStatusMessage(event.getPlayer2Id(), matchStatus.getId(), matchStatus.getSnapshot()));
-    if (event.getPlayer1Id() != null /*&& (firstMove || activePiece == Piece.PLAYER_1)*/) {
+     if (event.getPlayer1Id() != null) {
       sendToUser(event.getPlayer1Id(), new MatchStatusMessage(event.getPlayer1Id(), matchStatus.getId(), matchStatus.getSnapshot()));
     }
-    if (event.getPlayer2Id() != null /*&& (firstMove || activePiece == Piece.PLAYER_2)*/) {
+    if (event.getPlayer2Id() != null) {
       sendToUser(event.getPlayer2Id(), new MatchStatusMessage(event.getPlayer2Id(), matchStatus.getId(), matchStatus.getSnapshot()));
     }
   }
 
   private void sendToUser(UUID userUUID, MatchMessage message) {
+    buildMessage(userUUID, message, logger, objectMapper, messagingTemplate);
+  }
+
+  static void buildMessage(UUID userUUID, MatchMessage message, Logger logger, ObjectMapper objectMapper, SimpMessageSendingOperations messagingTemplate) {
     Map<String, Object> headers = new HashMap<>();
     headers.put(HEADER_TYPE, message.getMessageType());
     String userTopic = WebPathConstants.WS_TOPIC_USER_MATCH_DESTINATION.replace("{uuid}", userUUID.toString());

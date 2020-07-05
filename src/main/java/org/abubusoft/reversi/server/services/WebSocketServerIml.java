@@ -31,15 +31,7 @@ public class WebSocketServerIml implements WebSocketSender {
 
   @Override
   public <E extends MatchMessage> void sendMessage(UUID userUUID, E message) {
-    Map<String, Object> headers = new HashMap<>();
-    headers.put(HEADER_TYPE, message.getMessageType());
-    String userTopic = WebPathConstants.WS_TOPIC_USER_MATCH_DESTINATION.replace("{uuid}", userUUID.toString());
-    try {
-      logger.debug("Send message {} to {}: {}", message.getClass().getSimpleName(), userTopic, objectMapper.writeValueAsString(message));
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-    }
-    messagingTemplate.convertAndSend(userTopic, message, headers);
+    GameServiceImpl.buildMessage(userUUID, message, logger, objectMapper, messagingTemplate);
 
     //messagingTemplate.convertAndSendToUser("/status", connectedUser);
   }
